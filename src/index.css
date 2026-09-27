@@ -1,25 +1,22 @@
 @import "tailwindcss";
 
-/* Dark mode is driven by a `.dark` class on <html>, not the OS setting. */
+/* Dark mode is driven by a `.dark` class on <html> (resolved from settings). */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Register the accent vars as real <color>s so they interpolate. Changing the
-  primary colour (incl. live drag in the picker) then cross-fades the whole UI
-  instead of snapping.
+  Register the accent vars as real <color>s so they interpolate: changing the
+  primary colour cross-fades the whole UI instead of snapping.
 */
 @property --color-accent {
     syntax: "<color>";
     inherits: true;
-    initial-value: #f43f5e;
+    initial-value: #1f8a65;
 }
 @property --color-accent-strong {
     syntax: "<color>";
     inherits: true;
-    initial-value: #be2741;
+    initial-value: #1b7a59;
 }
-/* `theme-ready` is added after the first paint (see main.tsx) so the initial
-   colour applies instantly and only subsequent changes cross-fade. */
 html.theme-ready {
     transition:
         --color-accent 0.35s ease,
@@ -27,88 +24,137 @@ html.theme-ready {
 }
 
 /*
-  Semantic design tokens for the Minimalism Bento Grid dashboard.
-  Surfaces + text flip between light/dark; a single configurable accent
-  (primary colour) drives every highlight. No shadows.
+  Workspace tokens. A sage-graphite "paper" canvas carries the sidebar; the
+  page content sits on one lighter sheet with a hairline edge. Two area hues —
+  cool slate for work, warm clay for personal — mark where a task belongs.
+  The accent (user-configurable) means highlight + completion only; red is
+  reserved for overdue/urgent.
 */
-@theme {
+@theme static {
     --font-sans: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Bricolage Grotesque", "Be Vietnam Pro", ui-sans-serif, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-    --color-surface: #ffffff; /* cards */
-    --color-surface-muted: #f4f4f5; /* chips, icon wells */
-    --color-surface-sunken: #fafafa; /* inputs, calendar cells */
-    --color-surface-hover: #e4e4e7; /* hovered muted surfaces */
-    --color-shell: rgba(255, 255, 255, 0.62); /* translucent container */
-    --color-line: rgba(228, 228, 231, 0.7);
+    --color-canvas: #e9ece6;
+    --color-surface: #fbfcfa;
+    --color-surface-muted: #f0f2ee;
+    --color-surface-sunken: #f5f7f3;
+    --color-surface-hover: #e5e8e2;
+    --color-line: #dde1da;
+    --color-line-strong: #c8cec4;
 
-    --color-ink: #18181b;
-    --color-ink-soft: #52525b;
-    --color-ink-faint: #a1a1aa;
+    --color-ink: #1b1d1a;
+    --color-ink-soft: #535a51;
+    --color-ink-faint: #8a9187;
 
-    /* High-contrast solid buttons: neutral black/white, not the accent. The
-       accent is reserved for highlights + completion, keeping CTAs calm. */
-    --color-btn: #18181b;
-    --color-btn-ink: #ffffff;
+    --color-danger: #cf3c2c;
+    --color-danger-soft: color-mix(in srgb, var(--color-danger) 11%, transparent);
+    --color-warn: #c27803;
+    --color-work: #4c6a92;
+    --color-personal: #b7704f;
 
-    /* Tooltips: neutral high-contrast chip, independent of the accent. */
-    --color-tooltip: #18181b;
-    --color-tooltip-ink: #ffffff;
+    /* Charts: de-emphasis gray + a one-hue (slate) sequential ramp. */
+    --color-chart-muted: #9aa196;
+    --color-seq-1: #cfd9e7;
+    --color-seq-2: #8ea5c4;
+    --color-seq-3: #4c6a92;
 
-    /* Accent — only --color-accent changes per primary colour; the rest derive. */
-    --color-accent: #f43f5e;
-    --color-accent-soft: color-mix(in srgb, var(--color-accent) 16%, #ffffff);
-    --color-accent-ink: color-mix(in srgb, var(--color-accent) 78%, #000000);
-    /* Deepened accent for solid fills + white text; recomputed at runtime. */
-    --color-accent-strong: color-mix(in srgb, var(--color-accent) 78%, #000000);
+    --color-btn: #1b1d1a;
+    --color-btn-ink: #fbfcfa;
+    --color-tooltip: #1b1d1a;
+    --color-tooltip-ink: #fbfcfa;
 
-    /* Consistent rounding scale: outer container wraps slightly smaller cards. */
-    --radius-card: 1.75rem;
-    --radius-inner: 1rem;
+    --color-accent: #1f8a65;
+    --color-accent-soft: color-mix(in srgb, var(--color-accent) 13%, transparent);
+    --color-accent-ink: color-mix(in srgb, var(--color-accent) 80%, #000000);
+    --color-accent-strong: color-mix(in srgb, var(--color-accent) 85%, #000000);
+
+    --radius-sheet: 14px;
+    --radius-control: 8px;
     --radius-pill: 999px;
 
-    /* Enter/exit animations for Radix popovers, selects, dropdowns. */
-    --animate-pop-in: pop-in 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
-    --animate-pop-out: pop-out 0.12s ease-in;
+    --shadow-float: 0 1px 2px rgb(20 24 20 / 0.06), 0 8px 24px -6px rgb(20 24 20 / 0.18);
+    --shadow-sheet: 0 1px 0 rgb(20 24 20 / 0.03);
+
+    --animate-pop-in: pop-in 0.14s cubic-bezier(0.2, 0.8, 0.2, 1);
+    --animate-pop-out: pop-out 0.1s ease-in;
+}
+
+:root {
+    color-scheme: light;
+}
+
+.dark {
+    color-scheme: dark;
+    --color-canvas: #101210;
+    --color-surface: #171a17;
+    --color-surface-muted: #1f231f;
+    --color-surface-sunken: #1b1e1b;
+    --color-surface-hover: #282c28;
+    --color-line: #2a2f2a;
+    --color-line-strong: #3a413a;
+
+    --color-ink: #e7eae4;
+    --color-ink-soft: #a4ab9f;
+    --color-ink-faint: #6f766c;
+
+    --color-danger: #ef6f5e;
+    --color-warn: #e0a23a;
+    --color-work: #7f9cc4;
+    --color-personal: #d69476;
+
+    --color-chart-muted: #555d54;
+    --color-seq-1: #2e3a48;
+    --color-seq-2: #56708f;
+    --color-seq-3: #9db5d6;
+
+    --color-btn: #e7eae4;
+    --color-btn-ink: #121412;
+    --color-tooltip: #e7eae4;
+    --color-tooltip-ink: #121412;
+
+    --color-accent-soft: color-mix(in srgb, var(--color-accent) 22%, transparent);
+    --color-accent-ink: color-mix(in srgb, var(--color-accent) 60%, #ffffff);
+
+    --shadow-float: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
 }
 
 @keyframes pop-in {
     from {
         opacity: 0;
-        transform: scale(0.96) translateY(-4px);
+        transform: scale(0.97) translateY(-3px);
     }
     to {
         opacity: 1;
         transform: none;
     }
 }
-
 @keyframes pop-out {
     from {
         opacity: 1;
-        transform: none;
     }
     to {
         opacity: 0;
-        transform: scale(0.96) translateY(-4px);
+        transform: scale(0.98);
     }
 }
 
 /* react-colorful picker, reshaped to match the app (used by ui/color-picker). */
 .react-colorful.pt-colorful {
     width: 100%;
-    height: 220px;
+    height: 200px;
     gap: 12px;
 }
 .pt-colorful .react-colorful__saturation {
-    border-radius: 0.7rem;
+    border-radius: 8px;
 }
 .pt-colorful .react-colorful__hue {
-    height: 14px;
+    height: 12px;
     border-radius: 999px;
 }
 .pt-colorful .react-colorful__pointer {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
 }
 
 /* react-day-picker themed to app tokens (used by ui/calendar.tsx). */
@@ -116,55 +162,141 @@ html.theme-ready {
     --rdp-accent-color: var(--color-accent-strong);
     --rdp-accent-background-color: var(--color-accent-soft);
     --rdp-today-color: var(--color-accent-ink);
-    --rdp-day_button-border-radius: 999px;
+    --rdp-day_button-border-radius: 8px;
+    --rdp-day-height: 34px;
+    --rdp-day-width: 34px;
+    --rdp-day_button-height: 32px;
+    --rdp-day_button-width: 32px;
     --rdp-selected-border: none;
-    --rdp-outside-opacity: 0.4;
-    --rdp-disabled-opacity: 0.35;
+    --rdp-outside-opacity: 0.35;
     margin: 0;
     color: var(--color-ink);
-    font-size: 0.82rem;
+    font-size: 0.8rem;
 }
-.rdp-themed .rdp-caption_label,
-.rdp-themed .rdp-month_caption {
+.rdp-themed .rdp-caption_label {
     font-weight: 600;
     text-transform: capitalize;
-    color: var(--color-ink);
 }
 .rdp-themed .rdp-weekday {
     color: var(--color-ink-faint);
     font-weight: 500;
+    font-size: 0.7rem;
 }
 .rdp-themed .rdp-day_button:hover {
-    background: var(--color-surface-muted);
+    background: var(--color-surface-hover);
+}
+.rdp-themed .rdp-selected .rdp-day_button {
+    background: var(--color-accent-strong);
+    color: #fff;
 }
 .rdp-themed .rdp-chevron {
     fill: currentColor;
     color: var(--color-ink-soft);
 }
 
-.dark {
-    --color-surface: #1c1c1f;
-    --color-surface-muted: #27272a;
-    --color-surface-sunken: #232327;
-    --color-surface-hover: #3f3f46;
-    --color-shell: rgba(18, 18, 21, 0.6);
-    --color-line: rgba(63, 63, 70, 0.6);
-
-    --color-ink: #fafafa;
-    --color-ink-soft: #a1a1aa;
-    --color-ink-faint: #71717a;
-
-    --color-btn: #fafafa;
-    --color-btn-ink: #18181b;
-
-    /* Tooltip flips to a light chip so it stays readable on the dark UI. */
-    --color-tooltip: #fafafa;
-    --color-tooltip-ink: #18181b;
-
-    /* Translucent accent (like Tailwind's /15 chips) reads cleaner on dark
-       surfaces than mixing toward pure black, which looked muddy. */
-    --color-accent-soft: color-mix(in srgb, var(--color-accent) 24%, transparent);
-    --color-accent-ink: color-mix(in srgb, var(--color-accent) 72%, #ffffff);
+/* Markdown body for descriptions and note pages. */
+.prose-note {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+}
+.prose-note > * + * {
+    margin-top: 0.6em;
+}
+.prose-note h1,
+.prose-note h2,
+.prose-note h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+    margin-top: 1.2em;
+}
+.prose-note h1 {
+    font-size: 1.4rem;
+}
+.prose-note h2 {
+    font-size: 1.15rem;
+}
+.prose-note h3 {
+    font-size: 1rem;
+}
+.prose-note > :first-child {
+    margin-top: 0;
+}
+.prose-note ul,
+.prose-note ol {
+    padding-left: 1.3em;
+}
+.prose-note ul {
+    list-style: disc;
+}
+.prose-note ol {
+    list-style: decimal;
+}
+.prose-note li + li {
+    margin-top: 0.2em;
+}
+.prose-note li::marker {
+    color: var(--color-ink-faint);
+}
+.prose-note ul.contains-task-list {
+    list-style: none;
+    padding-left: 0.2em;
+}
+.prose-note input[type="checkbox"] {
+    accent-color: var(--color-accent-strong);
+    margin-right: 0.45em;
+    translate: 0 1px;
+}
+.prose-note a {
+    color: var(--color-accent-ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.prose-note code {
+    font-family: var(--font-mono);
+    font-size: 0.82em;
+    background: var(--color-surface-muted);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+}
+.prose-note pre {
+    background: var(--color-surface-muted);
+    border-radius: 8px;
+    padding: 0.8em 1em;
+    overflow-x: auto;
+}
+.prose-note pre code {
+    background: none;
+    padding: 0;
+}
+.prose-note blockquote {
+    border-left: 3px solid var(--color-line-strong);
+    padding-left: 0.9em;
+    color: var(--color-ink-soft);
+}
+.prose-note table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    display: block;
+    overflow-x: auto;
+}
+.prose-note th,
+.prose-note td {
+    border: 1px solid var(--color-line);
+    padding: 0.35em 0.7em;
+    text-align: left;
+}
+.prose-note th {
+    background: var(--color-surface-muted);
+    font-weight: 600;
+}
+.prose-note hr {
+    border: none;
+    border-top: 1px solid var(--color-line);
 }
 
 @layer base {
@@ -181,15 +313,15 @@ html.theme-ready {
     body {
         margin: 0;
         font-family: var(--font-sans);
+        font-size: 13px;
         color: var(--color-ink);
+        background: var(--color-canvas);
         -webkit-font-smoothing: antialiased;
-        /* Photographic background sitting behind the translucent shell.
-       The image is set at runtime from settings; this is the default. */
-        background-color: #6b5566;
-        background-image: url("/bg-2.jpg");
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    ::selection {
+        background: var(--color-accent-soft);
     }
 
     /* Every interactive element shows the pointer cursor. */
@@ -200,7 +332,8 @@ html.theme-ready {
     label[for],
     [role="button"],
     [role="tab"],
-    [draggable="true"] {
+    [role="menuitem"],
+    [role="option"] {
         cursor: pointer;
     }
     button:disabled,
@@ -208,24 +341,36 @@ html.theme-ready {
         cursor: not-allowed;
     }
 
-    /* Hide every scrollbar but keep scrolling fully functional. */
+    :focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
+        outline-offset: 1px;
+    }
+
     /* Thin, subtle scrollbars — visible enough to hint scrollable content. */
     * {
-        scrollbar-width: thin; /* Firefox */
-        scrollbar-color: rgba(113, 113, 122, 0.4) transparent;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--color-ink-faint) 45%, transparent) transparent;
     }
     ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
+        width: 8px;
+        height: 8px;
     }
     ::-webkit-scrollbar-thumb {
-        background: rgba(113, 113, 122, 0.4);
+        background: color-mix(in srgb, var(--color-ink-faint) 40%, transparent);
         border-radius: 999px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: rgba(113, 113, 122, 0.6);
+        border: 2px solid transparent;
+        background-clip: padding-box;
     }
     ::-webkit-scrollbar-track {
         background: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
     }
 }

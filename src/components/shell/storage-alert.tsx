@@ -1,7 +1,7 @@
 import { AlertTriangle, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { STORAGE_FULL_EVENT } from "../lib/use-local-storage";
-import { Tooltip } from "./ui/tooltip";
+import { STORAGE_FULL_EVENT } from "../../lib/persistence";
+import { Tooltip } from "../ui/tooltip";
 
 /**
  * Floating warning shown when a localStorage write fails because the quota is
@@ -20,11 +20,11 @@ export function StorageAlert() {
   if (!show) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-[70] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-full bg-red-600 px-4 py-2.5 text-sm font-medium text-white">
+    <div className="fixed bottom-4 left-1/2 z-[70] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-full bg-danger px-4 py-2.5 text-[13px] font-medium text-white">
       <AlertTriangle size={16} className="shrink-0" />
       <span>
-        Bộ nhớ trình duyệt đã đầy — thay đổi mới có thể không được lưu. Hãy xoá
-        bớt dữ liệu trong Cài đặt.
+        Bộ nhớ trình duyệt đã đầy — thay đổi mới có thể không được lưu. Hãy xuất sao lưu rồi
+        dọn bớt dữ liệu trong Cài đặt.
       </span>
       <Tooltip label="Đóng">
         <button

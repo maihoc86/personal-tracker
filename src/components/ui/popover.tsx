@@ -4,6 +4,7 @@ import { cn } from "../../lib/cn";
 
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
+export const PopoverAnchor = PopoverPrimitive.Anchor;
 
 export function PopoverContent({
   className,
@@ -16,8 +17,9 @@ export function PopoverContent({
       <PopoverPrimitive.Content
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={8}
         className={cn(
-          "z-[60] rounded-[var(--radius-inner)] bg-surface p-3 ring-1 ring-line outline-none",
+          "z-[60] rounded-[10px] border border-line bg-surface p-2 shadow-[var(--shadow-float)] outline-none",
           "data-[state=open]:animate-pop-in data-[state=closed]:animate-pop-out",
           className,
         )}

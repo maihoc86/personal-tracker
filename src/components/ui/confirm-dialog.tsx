@@ -1,12 +1,5 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { cn } from "../lib/cn";
+import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
+import { Button } from "./button";
 import { Modal } from "./modal";
 
 type ConfirmOptions = {
@@ -15,6 +8,8 @@ type ConfirmOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  /** Info-only dialog: a single button. */
+  alert?: boolean;
 };
 
 type ConfirmFn = (opts: ConfirmOptions) => Promise<boolean>;
@@ -29,9 +24,10 @@ export function useConfirm(): ConfirmFn {
 }
 
 export function ConfirmProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<{ open: boolean; options: ConfirmOptions }>(
-    { open: false, options: { title: "" } },
-  );
+  const [state, setState] = useState<{ open: boolean; options: ConfirmOptions }>({
+    open: false,
+    options: { title: "" },
+  });
   const resolver = useRef<(v: boolean) => void>(() => {});
 
   const confirm = useCallback<ConfirmFn>((options) => {
@@ -51,33 +47,22 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   return (
     <ConfirmContext.Provider value={confirm}>
       {children}
-      <Modal open={open} title={options.title} onClose={() => settle(false)}>
+      <Modal open={open} size="sm" title={options.title} onClose={() => settle(false)}>
         <div className="space-y-5">
           {options.message ? (
-            <p className="text-sm leading-relaxed text-ink-soft">
-              {options.message}
-            </p>
+            <p className="text-[13px] leading-relaxed text-ink-soft">{options.message}</p>
           ) : null}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => settle(false)}
-              className="flex-1 rounded-full bg-surface-muted py-2.5 text-sm font-semibold text-ink-soft transition-colors hover:bg-surface-hover"
-            >
-              {options.cancelLabel ?? "Huỷ"}
-            </button>
-            <button
-              type="button"
+          <div className="flex justify-end gap-2">
+            {options.alert ? null : (
+              <Button onClick={() => settle(false)}>{options.cancelLabel ?? "Huỷ"}</Button>
+            )}
+            <Button
+              autoFocus
+              variant={options.danger ? "danger" : "primary"}
               onClick={() => settle(true)}
-              className={cn(
-                "flex-1 rounded-full py-2.5 text-sm font-semibold transition-colors",
-                options.danger
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-btn text-btn-ink hover:opacity-90",
-              )}
             >
               {options.confirmLabel ?? "Xác nhận"}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
