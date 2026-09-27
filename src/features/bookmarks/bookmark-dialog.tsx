@@ -1,8 +1,9 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { FieldLabel, TextField } from "../../components/form-controls";
+import { Button } from "../../components/ui/button";
+import { FieldLabel, TextField } from "../../components/ui/form-controls";
 import { isSubmitEnter } from "../../lib/keyboard";
-import { Modal } from "../../components/modal";
+import { Modal } from "../../components/ui/modal";
 import { fetchPageTitle } from "../../lib/fetch-title";
 import { normalizeUrl, tidyTitle } from "../../lib/url";
 import { GroupPicker } from "./group-picker";
@@ -64,7 +65,7 @@ export function BookmarkDialog({
   }
 
   return (
-    <Modal open={open} title="Lưu bookmark" onClose={onClose}>
+    <Modal open={open} title="Lưu liên kết" onClose={onClose} size="sm">
       <div className="space-y-4">
         <div>
           <FieldLabel>Đường dẫn</FieldLabel>
@@ -80,7 +81,7 @@ export function BookmarkDialog({
           <div className="flex items-center justify-between">
             <FieldLabel>Tiêu đề</FieldLabel>
             {loadingTitle ? (
-              <span className="mb-1.5 flex items-center gap-1 text-xs text-ink-faint">
+              <span className="mb-1.5 flex items-center gap-1 text-[11.5px] text-ink-faint">
                 <Loader2 size={12} className="animate-spin" />
                 Đang lấy tiêu đề
               </span>
@@ -103,13 +104,12 @@ export function BookmarkDialog({
             onChange={(group) => setDraft((d) => ({ ...d, group }))}
           />
         </div>
-        <button
-          type="button"
-          onClick={submit}
-          className="w-full rounded-full bg-btn py-2.5 text-sm font-semibold text-btn-ink transition-colors hover:opacity-90"
-        >
-          Lưu lại
-        </button>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button onClick={onClose}>Huỷ</Button>
+          <Button variant="primary" onClick={submit} disabled={!draft.url.trim()}>
+            Lưu liên kết
+          </Button>
+        </div>
       </div>
     </Modal>
   );

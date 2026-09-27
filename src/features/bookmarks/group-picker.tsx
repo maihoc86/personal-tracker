@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { TextField } from "../../components/form-controls";
+import { TextField } from "../../components/ui/form-controls";
 import { cn } from "../../lib/cn";
 
 type GroupPickerProps = {
@@ -89,8 +89,8 @@ function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
-        active ? "bg-accent-soft text-accent-ink" : "bg-surface-muted text-ink-soft hover:bg-surface-hover",
+        "inline-flex h-7 items-center gap-1 rounded-[6px] border px-2.5 text-[12px] font-medium transition-colors",
+        active ? "border-transparent bg-accent-soft text-accent-ink" : "border-line text-ink-soft hover:bg-surface-hover",
       )}
     >
       {children}

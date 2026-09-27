@@ -1,9 +1,10 @@
 import { Check, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { TextField } from "../../components/form-controls";
+import { Button } from "../../components/ui/button";
+import { TextField } from "../../components/ui/form-controls";
 import { isSubmitEnter } from "../../lib/keyboard";
-import { IconButton } from "../../components/icon-button";
-import { Modal } from "../../components/modal";
+import { IconButton } from "../../components/ui/icon-button";
+import { Modal } from "../../components/ui/modal";
 
 type GroupManagerDialogProps = {
   open: boolean;
@@ -45,18 +46,18 @@ export function GroupManagerDialog({
   }
 
   return (
-    <Modal open={open} title="Quản lý nhóm" onClose={onClose}>
+    <Modal open={open} title="Quản lý nhóm liên kết" onClose={onClose} size="sm">
       <div className="space-y-4">
         <div className="space-y-1.5">
           {groups.length === 0 ? (
-            <p className="py-2 text-center text-sm text-ink-faint">
+            <p className="py-2 text-center text-[13px] text-ink-faint">
               Chưa có nhóm nào. Thêm nhóm đầu tiên bên dưới.
             </p>
           ) : (
             groups.map((g) => (
               <div
                 key={g}
-                className="flex items-center gap-2 rounded-[var(--radius-inner)] bg-surface-sunken px-3 py-2"
+                className="flex h-10 items-center gap-2 rounded-[var(--radius-control)] border border-line px-3"
               >
                 {editing === g ? (
                   <>
@@ -68,7 +69,7 @@ export function GroupManagerDialog({
                         if (isSubmitEnter(e)) commitEdit();
                         if (e.key === "Escape") setEditing(null);
                       }}
-                      className="min-w-0 flex-1 bg-transparent text-sm font-medium text-ink outline-none"
+                      className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-ink outline-none"
                     />
                     <IconButton
                       aria-label="Lưu tên"
@@ -91,14 +92,14 @@ export function GroupManagerDialog({
                       type="button"
                       onClick={() => startEdit(g)}
                       title="Đổi tên nhóm"
-                      className="min-w-0 flex-1 truncate text-left text-sm font-medium text-ink"
+                      className="min-w-0 flex-1 truncate text-left text-[13px] font-medium text-ink"
                     >
                       {g}
                     </button>
                     <IconButton
                       aria-label="Xoá nhóm"
                       onClick={() => onRemove(g)}
-                      className="h-7 w-7 text-ink-faint hover:text-red-600"
+                      className="h-7 w-7 text-ink-faint hover:text-danger"
                     >
                       <Trash2 size={15} />
                     </IconButton>
@@ -116,14 +117,10 @@ export function GroupManagerDialog({
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => isSubmitEnter(e) && addGroup()}
           />
-          <button
-            type="button"
-            onClick={addGroup}
-            className="flex h-[42px] shrink-0 items-center gap-1.5 rounded-full bg-btn px-4 text-sm font-semibold text-btn-ink transition-colors hover:opacity-90"
-          >
-            <Plus size={16} />
+          <Button variant="primary" onClick={addGroup} className="h-9">
+            <Plus size={14} />
             Thêm
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>
