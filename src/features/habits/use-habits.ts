@@ -1,6 +1,7 @@
+import { DATA_KEYS } from "../../lib/data-keys";
+import { addDaysIso, isIsoDate, todayIso } from "../../lib/date";
 import { createId } from "../../lib/id";
-import { toIsoDate, todayIso } from "../../lib/date";
-import { useLocalStorage } from "../../lib/use-local-storage";
+import { createPersistedStore, useStore } from "../../lib/store";
 
 export type Habit = {
   id: string;
@@ -9,65 +10,66 @@ export type Habit = {
   done: string[];
 };
 
-/** Habit store: add / remove / toggle today's completion. */
-export function useHabits() {
-  const [habits, setHabits] = useLocalStorage<Habit[]>("pt.habits", []);
+export function migrateHabits(raw: unknown): Habit[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((h) => {
+    if (typeof h !== "object" || h === null) return [];
+    const { id, name, done } = h as Record<string, unknown>;
+    if (typeof id !== "string" || typeof name !== "string") return [];
+    const days = Array.isArray(done) ? done.filter((d): d is string => typeof d === "string" && isIsoDate(d)) : [];
+    return [{ id, name, done: [...new Set(days)] }];
+  });
+}
 
-  function addHabit(name: string) {
+export const habitStore = createPersistedStore<Habit[]>(DATA_KEYS.habits, [], {
+  normalize: migrateHabits,
+});
+
+export const habitActions = {
+  add(name: string) {
     const clean = name.trim();
     if (!clean) return;
-    setHabits((prev) => [...prev, { id: createId(), name: clean, done: [] }]);
-  }
-
-  function removeHabit(id: string) {
-    setHabits((prev) => prev.filter((h) => h.id !== id));
-  }
-
-  function toggleToday(id: string) {
-    const t = todayIso();
-    setHabits((prev) =>
+    habitStore.set((prev) => [...prev, { id: createId(), name: clean, done: [] }]);
+  },
+  remove(id: string) {
+    habitStore.set((prev) => prev.filter((h) => h.id !== id));
+  },
+  toggle(id: string, day = todayIso()) {
+    habitStore.set((prev) =>
       prev.map((h) =>
         h.id === id
-          ? {
-              ...h,
-              done: h.done.includes(t)
-                ? h.done.filter((d) => d !== t)
-                : [...h.done, t],
-            }
+          ? { ...h, done: h.done.includes(day) ? h.done.filter((d) => d !== day) : [...h.done, day] }
           : h,
       ),
     );
-  }
+  },
+};
 
-  return { habits, addHabit, removeHabit, toggleToday };
-}
-
-function shiftIso(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return toIsoDate(d);
+export function useHabits(): Habit[] {
+  return useStore(habitStore);
 }
 
 /** Consecutive completed days ending today (or yesterday if today isn't done). */
-export function currentStreak(done: string[]): number {
+export function currentStreak(done: string[], today = todayIso()): number {
   const set = new Set(done);
-  let offset = set.has(shiftIso(0)) ? 0 : -1;
+  let day = set.has(today) ? today : addDaysIso(today, -1);
   let streak = 0;
-  while (set.has(shiftIso(offset))) {
+  while (set.has(day)) {
     streak++;
-    offset--;
+    day = addDaysIso(day, -1);
   }
   return streak;
 }
 
-/** The last 7 days (oldest → newest) with completion + today flags. */
-export function last7Days(
+/** The last `count` days (oldest → newest) with completion + today flags. */
+export function recentDays(
   done: string[],
+  count = 7,
+  today = todayIso(),
 ): Array<{ iso: string; done: boolean; isToday: boolean }> {
   const set = new Set(done);
-  const today = todayIso();
-  return Array.from({ length: 7 }, (_, i) => {
-    const iso = shiftIso(i - 6);
+  return Array.from({ length: count }, (_, i) => {
+    const iso = addDaysIso(today, i - (count - 1));
     return { iso, done: set.has(iso), isToday: iso === today };
   });
 }

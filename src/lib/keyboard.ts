@@ -10,3 +10,7 @@ import type { KeyboardEvent } from "react";
 export function isSubmitEnter(e: KeyboardEvent): boolean {
   return e.key === "Enter" && !e.nativeEvent.isComposing;
 }
+
+/** "⌘" on Apple platforms, "Ctrl" elsewhere. */
+export const MOD_KEY =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl";
