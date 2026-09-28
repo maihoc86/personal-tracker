@@ -13,10 +13,12 @@ type TaskRowProps = {
   blocked?: number;
   /** Hide the due chip when the section already says when (e.g. "Hôm nay"). */
   hideDue?: boolean;
+  /** Trailing control, e.g. add to / remove from today's plan. */
+  action?: React.ReactNode;
 };
 
 /** A to-do style row: tick to complete, click to open. */
-export function TaskRow({ task, keyLabel, project, blocked = 0, hideDue }: TaskRowProps) {
+export function TaskRow({ task, keyLabel, project, blocked = 0, hideDue, action }: TaskRowProps) {
   const done = task.status === "done";
   return (
     <div
@@ -55,6 +57,11 @@ export function TaskRow({ task, keyLabel, project, blocked = 0, hideDue }: TaskR
       </span>
       {!hideDue ? <DueChip task={task} className="shrink-0" /> : task.dueTime ? <span className="shrink-0 font-mono text-[11.5px] text-ink-soft">{task.dueTime}</span> : null}
       <PriorityIcon priority={task.priority} className={cn("shrink-0", task.priority === "low" && "opacity-0")} />
+      {action ? (
+        <span className="shrink-0" onClick={(e) => e.stopPropagation()}>
+          {action}
+        </span>
+      ) : null}
     </div>
   );
 }

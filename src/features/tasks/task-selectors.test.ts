@@ -31,7 +31,7 @@ function t(id: string, o: Partial<Task> = {}): Task {
     title: id,
     description: "",
     status: "todo",
-    stageId: "",
+    stageId: "", plannedFor: "",
     priority: "medium",
     startDate: "",
     dueDate: "",

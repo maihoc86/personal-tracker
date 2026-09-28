@@ -9,6 +9,17 @@ export type Settings = {
   primary: string;
   /** Hide done tasks completed more than N days ago; 0 = never hide. */
   archiveDays: number;
+  /** Hours of focused work you can plan into one day. */
+  capacityHours: number;
+  reminders: ReminderSettings;
+};
+
+export type ReminderSettings = {
+  enabled: boolean;
+  /** Remind this many minutes before a task's due time. */
+  leadMinutes: number;
+  /** "HH:mm" for the morning summary, or "" for none. */
+  digestTime: string;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -16,7 +27,11 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   primary: "#1f8a65",
   archiveDays: 90,
+  capacityHours: 6,
+  reminders: { enabled: true, leadMinutes: 15, digestTime: "08:30" },
 };
+
+export const LEAD_OPTIONS = [0, 5, 15, 30, 60];
 
 /** Choices for the auto-hide threshold (Settings). */
 export const ARCHIVE_DAY_OPTIONS = [
@@ -115,6 +130,21 @@ export function normalizeSettings(raw: unknown): Settings {
       typeof r.primary === "string" && /^#[0-9a-f]{6}$/i.test(r.primary) ? r.primary : DEFAULT_SETTINGS.primary,
     archiveDays:
       typeof r.archiveDays === "number" && r.archiveDays >= 0 ? r.archiveDays : DEFAULT_SETTINGS.archiveDays,
+    capacityHours:
+      typeof r.capacityHours === "number" && r.capacityHours > 0 && r.capacityHours <= 24
+        ? r.capacityHours
+        : DEFAULT_SETTINGS.capacityHours,
+    reminders: normalizeReminders(r.reminders),
+  };
+}
+
+function normalizeReminders(raw: unknown): ReminderSettings {
+  const d = DEFAULT_SETTINGS.reminders;
+  const r = (typeof raw === "object" && raw !== null ? raw : {}) as Record<string, unknown>;
+  return {
+    enabled: typeof r.enabled === "boolean" ? r.enabled : d.enabled,
+    leadMinutes: typeof r.leadMinutes === "number" && r.leadMinutes >= 0 && r.leadMinutes <= 1440 ? r.leadMinutes : d.leadMinutes,
+    digestTime: typeof r.digestTime === "string" && /^([01]\d|2[0-3]):[0-5]\d$|^$/.test(r.digestTime) ? r.digestTime : d.digestTime,
   };
 }
 

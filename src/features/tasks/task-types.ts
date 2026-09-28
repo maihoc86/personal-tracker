@@ -56,6 +56,10 @@ export type Task = {
   dueDate: string;
   /** 24h "HH:mm" on the due date, or "". */
   dueTime: string;
+  /** ISO day the task is planned to be worked on ("My Day"), or "". */
+  plannedFor: string;
+  /** Epoch ms of a custom reminder, if any. */
+  remindAt?: number;
   /** Estimated effort in hours; undefined when not set. */
   estimatedHours?: number;
   tags: string[];
@@ -84,6 +88,8 @@ export type TaskDraft = Partial<
     | "startDate"
     | "dueDate"
     | "dueTime"
+    | "plannedFor"
+    | "remindAt"
     | "estimatedHours"
     | "tags"
     | "checklist"

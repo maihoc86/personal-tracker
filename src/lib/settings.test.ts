@@ -12,6 +12,13 @@ describe("settings", () => {
     expect(normalizeSettings({ archiveDays: -1 }).archiveDays).toBe(DEFAULT_SETTINGS.archiveDays);
   });
 
+  it("normalizes capacity and reminder settings", () => {
+    const s = normalizeSettings({ capacityHours: 30, reminders: { enabled: false, leadMinutes: -5, digestTime: "25:00" } });
+    expect(s.capacityHours).toBe(DEFAULT_SETTINGS.capacityHours);
+    expect(s.reminders).toEqual({ enabled: false, leadMinutes: 15, digestTime: "08:30" });
+    expect(normalizeSettings({ reminders: { digestTime: "" } }).reminders.digestTime).toBe("");
+  });
+
   it("detects custom colours", () => {
     expect(isCustomColor(PRIMARY_COLORS[0].value.toUpperCase(), PRIMARY_COLORS)).toBe(false);
     expect(isCustomColor("#123456", PRIMARY_COLORS)).toBe(true);

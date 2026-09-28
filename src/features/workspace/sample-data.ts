@@ -68,25 +68,27 @@ type TaskSeed = {
   blockedBy?: string[];
   /** Explicit custom stage id (otherwise picked from the status). */
   stage?: string;
+  /** Planned-for day offset ("My Day"). */
+  plan?: number;
 };
 
 const TASKS: TaskSeed[] = [
   { ref: "scope", project: "web", title: "Chốt phạm vi giai đoạn 2 với khách", status: "doing", priority: "high",
     description: "Thống nhất danh sách tính năng, mốc bàn giao và chi phí phát sinh.\n\n- Gửi bản ước lượng trước buổi họp\n- Ghi biên bản và xin xác nhận qua email",
-    start: -3, due: 1, estimate: 3, tags: ["họp"], logged: [90], stage: "web-review",
+    start: -3, due: 1, estimate: 3, tags: ["họp"], logged: [90], stage: "web-review", plan: 0,
     checklist: [["Tổng hợp yêu cầu", true], ["Ước lượng effort", true], ["Gửi biên bản", false]],
     comments: ["Khách muốn thêm cổng thanh toán nội địa, cần tách thành change request."] },
   { ref: "checkout", project: "web", title: "Thiết kế lại trang thanh toán", status: "todo", priority: "high",
     start: 2, due: 8, estimate: 12, tags: ["ui"], blockedBy: ["scope"] },
   { ref: "login", project: "web", title: "Sửa lỗi đăng nhập Google trên Safari", status: "todo", priority: "urgent",
-    description: "Popup bị chặn trên Safari 18, cần chuyển sang redirect flow.", due: 0, dueTime: "17:00", estimate: 2, tags: ["bug"] },
+    description: "Popup bị chặn trên Safari 18, cần chuyển sang redirect flow.", due: 0, dueTime: "17:00", estimate: 2, tags: ["bug"], plan: 0 },
   { ref: "api-doc", project: "web", title: "Viết tài liệu API cho đối tác", status: "backlog", priority: "medium", due: 14, estimate: 6, tags: ["tài liệu"] },
   { ref: "qa", project: "web", title: "Kiểm thử luồng đăng ký trên mobile", status: "doing", priority: "medium", start: -2, due: 3, estimate: 3, tags: ["qa"], stage: "web-qa" },
   { ref: "demo", project: "web", title: "Demo sprint cho khách hàng", status: "todo", priority: "medium", start: 4, due: 5, dueTime: "15:00", estimate: 1.5, tags: ["họp"] },
   { ref: "perf", project: "web", title: "Kiểm thử hiệu năng trang chủ", status: "done", priority: "medium", start: -7, due: -3, estimate: 4, logged: [120, 110, 70], doneDaysAgo: 2 },
   { ref: "ci", project: "web", title: "Cấu hình CI/CD cho staging", status: "done", priority: "high", start: -9, due: -6, estimate: 5, logged: [150, 90], doneDaysAgo: 5 },
   { ref: "weekly", project: "ops", title: "Báo cáo tuần cho ban giám đốc", status: "todo", priority: "high", due: 5, estimate: 1, tags: ["báo cáo"], recurrence: { freq: "weekly", interval: 1 } },
-  { ref: "hiring", project: "ops", title: "Phỏng vấn 2 ứng viên BA", status: "doing", priority: "medium", start: -1, due: 2, estimate: 2, tags: ["tuyển dụng"], logged: [45] },
+  { ref: "hiring", project: "ops", title: "Phỏng vấn 2 ứng viên BA", status: "doing", priority: "medium", start: -1, due: 2, estimate: 2, tags: ["tuyển dụng"], logged: [45], plan: 0 },
   { ref: "license", project: "ops", title: "Gia hạn license phần mềm thiết kế", status: "backlog", priority: "low", due: 20, estimate: 0.5 },
   { ref: "onboard", project: "ops", title: "Rà soát quy trình onboarding nhân sự mới", status: "done", priority: "medium", start: -12, due: -8, estimate: 3, logged: [150], doneDaysAgo: 7 },
   { ref: "bills", project: "home", title: "Đóng tiền điện nước", status: "todo", priority: "high", due: 2, estimate: 0.5, tags: ["hoá đơn"], recurrence: { freq: "monthly", interval: 1 } },
@@ -96,7 +98,7 @@ const TASKS: TaskSeed[] = [
   { ref: "grandma", project: "home", title: "Gọi điện hỏi thăm ông bà", status: "done", priority: "medium", due: -1, doneDaysAgo: 1 },
   { ref: "swim", project: "home", title: "Đưa con đi học bơi", status: "done", priority: "medium", due: 0, estimate: 2, doneDaysAgo: 0 },
   { ref: "checkup", project: "health", title: "Khám sức khoẻ định kỳ", status: "backlog", priority: "medium", due: 9, estimate: 2 },
-  { ref: "dentist", project: "health", title: "Đặt lịch tái khám nha khoa", status: "todo", priority: "medium", due: -1 },
+  { ref: "dentist", project: "health", title: "Đặt lịch tái khám nha khoa", status: "todo", priority: "medium", due: -1, plan: -1 },
   { ref: "book", project: "", title: "Đọc 'Deep Work' chương 3", status: "todo", priority: "low", tags: ["đọc"] },
   { ref: "idea", project: "", title: "Ý tưởng: tự động hoá báo cáo tuần bằng AI", status: "backlog", priority: "medium", tags: ["ý tưởng"] },
   { ref: "library", project: "", title: "Trả sách cho thư viện", status: "doing", priority: "high", due: -1 },
@@ -178,6 +180,7 @@ export function buildSampleData(today = todayIso(), now = Date.now()): SampleDat
       startDate: seed.start !== undefined ? addDaysIso(today, seed.start) : "",
       dueDate: seed.due !== undefined ? addDaysIso(today, seed.due) : "",
       dueTime: seed.dueTime ?? "",
+      plannedFor: seed.plan !== undefined ? addDaysIso(today, seed.plan) : "",
       estimatedHours: seed.estimate,
       tags: seed.tags ?? [],
       checklist: (seed.checklist ?? []).map(([text, done]) => ({ id: createId(), text, done })),

@@ -12,6 +12,7 @@ import { focusActions, useFocusTicker } from "./features/focus/focus-store";
 import { useAutoBackupScheduler } from "./features/auto-backup/auto-backup-service";
 import { ProjectDialog } from "./features/projects/project-dialog";
 import { usePwa } from "./features/pwa/pwa";
+import { useReminderTicker } from "./features/reminders/reminder-service";
 import { TaskPanel } from "./features/tasks/detail/task-panel";
 import { QuickAddDialog } from "./features/tasks/quick-add-dialog";
 import { WorkflowDialog } from "./features/workflow/workflow-dialog";
@@ -39,6 +40,7 @@ export function App() {
   useFocusTicker();
   useAutoBackupScheduler();
   usePwa();
+  useReminderTicker();
   const settings = useSettings();
   const { route, query } = useRoute();
   const { mobileNav } = useUi();

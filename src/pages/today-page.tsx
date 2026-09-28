@@ -9,7 +9,10 @@ import { AREA_META, type Area } from "../features/projects/project-types";
 import { useProjects } from "../features/projects/project-store";
 import { TaskRow } from "../features/tasks/components/task-row";
 import { openBlockers, projectMap, taskArea, taskKey, todayBuckets } from "../features/tasks/task-selectors";
-import { useTasks } from "../features/tasks/task-store";
+import { taskActions, useTasks } from "../features/tasks/task-store";
+import { PlanCard, PlanToggle } from "../features/planning/plan-card";
+import { capacitySummary, planBuckets } from "../features/planning/planning-model";
+import { useSettings } from "../lib/use-settings";
 import type { Task } from "../features/tasks/task-types";
 import { cn } from "../lib/cn";
 import { formatDayLabel, parseIso, todayIso, WEEKDAY_LONG } from "../lib/date";
@@ -33,10 +36,12 @@ export function TodayPage() {
   );
   const b = useMemo(() => todayBuckets(scoped, today, startOfToday), [scoped, today, startOfToday]);
   const d = parseIso(today);
-  const dueNow = b.overdue.length + b.today.length;
+  const settings = useSettings();
+  const plan = useMemo(() => planBuckets(scoped, today), [scoped, today]);
+  const capacity = capacitySummary(plan.planned, settings.capacityHours);
 
-  const row = (t: Task, hideDue = false) => (
-    <TaskRow key={t.id} task={t} keyLabel={taskKey(t, pm)} project={pm.get(t.projectId)} blocked={openBlockers(t, byId).length} hideDue={hideDue} />
+  const row = (t: Task, hideDue = false, action?: ReactNode) => (
+    <TaskRow key={t.id} task={t} keyLabel={taskKey(t, pm)} project={pm.get(t.projectId)} blocked={openBlockers(t, byId).length} hideDue={hideDue} action={action} />
   );
 
   return (
@@ -45,9 +50,9 @@ export function TodayPage() {
         title="Hôm nay"
         icon={<CalendarCheck2 size={16} className="text-ink-faint" />}
         actions={
-          <Button variant="primary" size="sm" onClick={() => ui.openQuickAdd({ dueDate: today })}>
+          <Button variant="primary" size="sm" onClick={() => ui.openQuickAdd({ plannedFor: today })}>
             <Plus size={14} />
-            <span className="hidden sm:inline">Việc hôm nay</span>
+            <span className="hidden sm:inline">Thêm vào hôm nay</span>
           </Button>
         }
       />
@@ -64,29 +69,45 @@ export function TodayPage() {
             </div>
 
             <div className="space-y-6">
-              {b.overdue.length ? (
-                <Section title="Quá hạn" count={b.overdue.length} tone="danger">
-                  {b.overdue.map((t) => row(t))}
+              <PlanCard
+                planned={plan.planned}
+                capacity={capacity}
+                renderRow={(t) => row(t, false, <PlanToggle task={t} planned />)}
+                onAdd={() => ui.openQuickAdd({ plannedFor: today })}
+              />
+              {plan.carryOver.length ? (
+                <Section
+                  title="Kế hoạch trước chưa xong"
+                  count={plan.carryOver.length}
+                  tone="warn"
+                  action={
+                    <Button size="sm" variant="ghost" onClick={() => taskActions.patchMany(plan.carryOver.map((t) => t.id), { plannedFor: today })}>
+                      Chuyển hết sang hôm nay
+                    </Button>
+                  }
+                >
+                  {plan.carryOver.map((t) => row(t, false, <PlanToggle task={t} />))}
                 </Section>
               ) : null}
               <Section
-                title="Hạn hôm nay"
-                count={b.today.length}
-                tone="warn"
-                empty={dueNow === 0 ? "Không có việc nào đến hạn hôm nay. Kéo một việc từ bên dưới lên hoặc tạo việc mới." : "Không còn việc nào hạn hôm nay."}
+                title="Gợi ý cho hôm nay"
+                count={plan.suggestions.length}
+                empty="Không có việc đến hạn, quá hạn hay đang làm nằm ngoài kế hoạch."
+                action={
+                  plan.suggestions.length ? (
+                    <Button size="sm" variant="ghost" onClick={() => taskActions.patchMany(plan.suggestions.map((t) => t.id), { plannedFor: today })}>
+                      Thêm tất cả
+                    </Button>
+                  ) : null
+                }
               >
-                {b.today.map((t) => row(t, true))}
+                {plan.suggestions.map((t) => row(t, false, <PlanToggle task={t} />))}
               </Section>
-              {b.inProgress.length ? (
-                <Section title="Đang làm" count={b.inProgress.length}>
-                  {b.inProgress.map((t) => row(t))}
-                </Section>
-              ) : null}
               <Section title="7 ngày tới" count={b.upcoming.length} empty="Tuần tới chưa có việc nào có hạn.">
                 {groupByDay(b.upcoming).map(([iso, list]) => (
                   <div key={iso}>
                     <p className="px-2 pb-0.5 pt-2 text-[11.5px] font-medium text-ink-faint">{formatDayLabel(iso, today)}</p>
-                    {list.map((t) => row(t, true))}
+                    {list.map((t) => row(t, true, <PlanToggle task={t} planned={t.plannedFor === today} />))}
                   </div>
                 ))}
               </Section>
@@ -160,6 +181,7 @@ function Section({
   tone,
   empty,
   collapsible,
+  action,
   children,
 }: {
   title: string;
@@ -167,15 +189,17 @@ function Section({
   tone?: "danger" | "warn" | "accent";
   empty?: string;
   collapsible?: boolean;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(!collapsible);
   return (
     <section>
+      <div className="mb-1 flex items-center gap-2 border-b border-line pb-1.5">
       <button
         type="button"
         onClick={() => collapsible && setOpen((o) => !o)}
-        className={cn("mb-1 flex w-full items-center gap-2 border-b border-line px-2 pb-2 text-left", !collapsible && "cursor-default")}
+        className={cn("flex min-w-0 flex-1 items-center gap-2 px-2 py-0.5 text-left", !collapsible && "cursor-default")}
         aria-expanded={collapsible ? open : undefined}
       >
         {collapsible ? <ChevronRight size={13} className={cn("text-ink-faint transition-transform", open && "rotate-90")} /> : null}
@@ -189,6 +213,8 @@ function Section({
         </h3>
         <span className="font-mono text-[11px] tabular-nums text-ink-faint">{count}</span>
       </button>
+        {action}
+      </div>
       {open ? (
         count ? (
           <div role="list">{children}</div>

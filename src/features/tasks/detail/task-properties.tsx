@@ -1,4 +1,5 @@
-import { CalendarClock, CalendarRange, Clock, Inbox, Repeat } from "lucide-react";
+import { CalendarClock, CalendarRange, Clock, Inbox, Repeat, Sun } from "lucide-react";
+import { ReminderField } from "../../reminders/reminder-field";
 import { useEffect, useState } from "react";
 import { DatePicker } from "../../../components/ui/date-picker";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "../../../components/ui/menu";
@@ -105,6 +106,19 @@ export function TaskProperties({ task, allTasks, projects, projectMap }: TaskPro
           </label>
         </PropertyRow>
       ) : null}
+
+      <PropertyRow label="Kế hoạch">
+        <DatePicker value={task.plannedFor} onChange={(plannedFor) => patch({ plannedFor })}>
+          <button type="button" className={propButton}>
+            <Sun size={14} className="shrink-0 text-ink-faint" />
+            {task.plannedFor ? `Làm ${formatDayLabel(task.plannedFor).toLowerCase()}` : <Placeholder>Chưa lên kế hoạch</Placeholder>}
+          </button>
+        </DatePicker>
+      </PropertyRow>
+
+      <PropertyRow label="Nhắc lúc">
+        <ReminderField task={task} />
+      </PropertyRow>
 
       <PropertyRow label="Ước lượng">
         <EstimateInput value={task.estimatedHours} onChange={(estimatedHours) => patch({ estimatedHours })} />

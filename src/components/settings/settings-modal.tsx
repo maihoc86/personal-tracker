@@ -1,5 +1,6 @@
-import { Columns3, Database, Keyboard, Palette, SlidersHorizontal } from "lucide-react";
+import { BellRing, Columns3, Database, Keyboard, Palette, SlidersHorizontal } from "lucide-react";
 import { StatusIcon } from "../../features/tasks/components/task-icons";
+import { ReminderSettings } from "../../features/reminders/reminder-settings";
 import { useWorkflow } from "../../features/workflow/workflow-store";
 import { Button } from "../ui/button";
 import { installApp, isStandalone, useCanInstall } from "../../features/pwa/pwa";
@@ -16,12 +17,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { AppearanceControls } from "./appearance-controls";
 import { DataControls } from "./data-controls";
 
-type Tab = "general" | "appearance" | "workflow" | "data" | "shortcuts";
+type Tab = "general" | "appearance" | "workflow" | "reminders" | "data" | "shortcuts";
 
 const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: "general", label: "Chung", icon: <SlidersHorizontal size={14} /> },
   { id: "appearance", label: "Giao diện", icon: <Palette size={14} /> },
   { id: "workflow", label: "Workflow", icon: <Columns3 size={14} /> },
+  { id: "reminders", label: "Nhắc việc & kế hoạch", icon: <BellRing size={14} /> },
   { id: "data", label: "Dữ liệu", icon: <Database size={14} /> },
   { id: "shortcuts", label: "Phím tắt", icon: <Keyboard size={14} /> },
 ];
@@ -55,7 +57,7 @@ export function SettingsModal() {
 
   return (
     <Modal open={open} title="Cài đặt" onClose={ui.closeSettings} size="lg" peek={peek}>
-      <div className="grid gap-5 sm:grid-cols-[150px_1fr]">
+      <div className="grid gap-5 sm:grid-cols-[170px_1fr]">
         <nav aria-label="Mục cài đặt" className="flex gap-1 overflow-x-auto sm:flex-col">
           {TABS.map((t) => (
             <button
@@ -101,6 +103,8 @@ export function SettingsModal() {
             </div>
           ) : tab === "appearance" ? (
             <AppearanceControls settings={settings} onUpdate={updateSettings} onPreview={setPeek} />
+          ) : tab === "reminders" ? (
+            <ReminderSettings settings={settings} onUpdate={updateSettings} />
           ) : tab === "workflow" ? (
             <WorkflowSummary />
           ) : tab === "data" ? (

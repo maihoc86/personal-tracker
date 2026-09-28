@@ -13,7 +13,7 @@ type UiState = {
   projectDialog: { mode: "new"; area: "work" | "personal" } | { mode: "edit"; id: string } | null;
   settings: boolean;
   /** Tab the settings dialog opens on. */
-  settingsTab: "general" | "appearance" | "workflow" | "data" | "shortcuts";
+  settingsTab: "general" | "appearance" | "workflow" | "reminders" | "data" | "shortcuts";
   mobileNav: boolean;
   /** Stage editor: the default workflow or one project's. */
   workflowDialog: { scope: "default" } | { scope: "project"; id: string } | null;
