@@ -26,6 +26,7 @@ import { ProjectSwatch, StatusIcon } from "../../features/tasks/components/task-
 import { projectMap, taskKey } from "../../features/tasks/task-selectors";
 import { useTasks } from "../../features/tasks/task-store";
 import { downloadBackup } from "../../features/workspace/backup";
+import { autoBackupActions } from "../../features/auto-backup/auto-backup-service";
 import { isDarkTheme } from "../../lib/settings";
 import { matchesQuery } from "../../lib/text";
 import { navigate, openTask, type Route } from "../../lib/router";
@@ -170,10 +171,13 @@ function PaletteItems({ query, onDone }: { query: string; onDone: () => void }) 
         <Item value="tuy chinh stage workflow" keywords={["stage", "column", "cot", "quy trinh"]} onSelect={run(() => ui.editStages(routeProjectId()))} icon={<Settings size={15} />}>
           Tuỳ chỉnh stage{routeProjectId() ? " của dự án này" : " (mặc định)"}
         </Item>
-        <Item value="cai dat" keywords={["settings"]} onSelect={run(ui.openSettings)} icon={<Settings size={15} />}>
+        <Item value="cai dat" keywords={["settings"]} onSelect={run(() => ui.openSettings())} icon={<Settings size={15} />}>
           Mở cài đặt
         </Item>
-        <Item value="xuat du lieu sao luu" keywords={["export", "backup", "json"]} onSelect={run(() => downloadBackup())} icon={<Download size={15} />}>
+        <Item value="xuat du lieu sao luu" keywords={["export", "backup", "json"]} onSelect={run(() => {
+            downloadBackup();
+            autoBackupActions.markExported();
+          })} icon={<Download size={15} />}>
           Xuất bản sao lưu JSON
         </Item>
       </Command.Group>

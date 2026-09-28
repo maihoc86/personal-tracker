@@ -26,6 +26,7 @@ import { useSettings } from "../../lib/use-settings";
 import { IconButton } from "../ui/icon-button";
 import { MOD_KEY } from "../../lib/keyboard";
 import { Kbd } from "../ui/kbd";
+import { BackupStatus } from "../../features/auto-backup/backup-status";
 import { FocusStatus } from "./focus-status";
 import { ui } from "./ui-store";
 
@@ -68,7 +69,7 @@ export function Sidebar({ className }: { className?: string }) {
         <span className="min-w-0 flex-1 truncate font-display text-[15px] font-semibold tracking-tight">
           {settings.boardTitle || "Personal Tracker"}
         </span>
-        <IconButton size="sm" aria-label="Cài đặt" onClick={ui.openSettings}>
+        <IconButton size="sm" aria-label="Cài đặt" onClick={() => ui.openSettings()}>
           <Settings size={15} />
         </IconButton>
       </div>
@@ -132,6 +133,7 @@ export function Sidebar({ className }: { className?: string }) {
         </div>
       </div>
 
+      <BackupStatus />
       <FocusStatus />
     </nav>
   );

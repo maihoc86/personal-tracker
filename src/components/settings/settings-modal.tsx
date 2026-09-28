@@ -2,7 +2,8 @@ import { Columns3, Database, Keyboard, Palette, SlidersHorizontal } from "lucide
 import { StatusIcon } from "../../features/tasks/components/task-icons";
 import { useWorkflow } from "../../features/workflow/workflow-store";
 import { Button } from "../ui/button";
-import { useState, type ReactNode } from "react";
+import { installApp, isStandalone, useCanInstall } from "../../features/pwa/pwa";
+import { useEffect, useState, type ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { ARCHIVE_DAY_OPTIONS } from "../../lib/settings";
 import { updateSettings, useSettings } from "../../lib/use-settings";
@@ -42,9 +43,13 @@ const SHORTCUTS: [string[], string][] = [
 ];
 
 export function SettingsModal() {
-  const { settings: open } = useUi();
+  const { settings: open, settingsTab } = useUi();
   const settings = useSettings();
   const [tab, setTab] = useState<Tab>("general");
+  // Open on the tab the caller asked for (e.g. the sidebar backup nudge).
+  useEffect(() => {
+    if (open) setTab(settingsTab);
+  }, [open, settingsTab]);
   // Fade the dialog while the colour picker is open so the change shows live.
   const [peek, setPeek] = useState(false);
 
@@ -72,6 +77,7 @@ export function SettingsModal() {
         <div className="min-h-[320px]">
           {tab === "general" ? (
             <div className="space-y-5">
+              <InstallRow />
               <div>
                 <FieldLabel htmlFor="ws-name">Tên không gian làm việc</FieldLabel>
                 <TextField id="ws-name" value={settings.boardTitle} placeholder="vd: Không gian của Học" onChange={(e) => updateSettings({ boardTitle: e.target.value })} />
@@ -146,6 +152,28 @@ function WorkflowSummary() {
           Chỉnh sửa workflow mặc định
         </Button>
       </div>
+    </div>
+  );
+}
+
+/** Offer "install as an app" when the browser allows it. */
+function InstallRow() {
+  const canInstall = useCanInstall();
+  if (isStandalone()) {
+    return <p className="rounded-[10px] border border-line px-3 py-2.5 text-[12.5px] text-ink-soft">Đang chạy như ứng dụng đã cài — dùng được cả khi offline.</p>;
+  }
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-[10px] border border-line px-3 py-2.5">
+      <span className="text-[12.5px] leading-relaxed text-ink-soft">
+        {canInstall
+          ? "Cài như một ứng dụng: có biểu tượng riêng, mở trong cửa sổ riêng, chạy cả khi offline."
+          : "Có thể cài như ứng dụng từ menu trình duyệt (Chrome/Edge: biểu tượng cài trên thanh địa chỉ · Safari: Chia sẻ → Thêm vào Dock / Màn hình chính)."}
+      </span>
+      {canInstall ? (
+        <Button variant="primary" onClick={() => void installApp()}>
+          Cài ứng dụng
+        </Button>
+      ) : null}
     </div>
   );
 }

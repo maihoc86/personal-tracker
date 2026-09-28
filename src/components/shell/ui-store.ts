@@ -12,6 +12,8 @@ type UiState = {
   /** Project dialog: "new" (with area), an id to edit, or null. */
   projectDialog: { mode: "new"; area: "work" | "personal" } | { mode: "edit"; id: string } | null;
   settings: boolean;
+  /** Tab the settings dialog opens on. */
+  settingsTab: "general" | "appearance" | "workflow" | "data" | "shortcuts";
   mobileNav: boolean;
   /** Stage editor: the default workflow or one project's. */
   workflowDialog: { scope: "default" } | { scope: "project"; id: string } | null;
@@ -22,6 +24,7 @@ const initial: UiState = {
   quickAdd: null,
   projectDialog: null,
   settings: false,
+  settingsTab: "general",
   mobileNav: false,
   workflowDialog: null,
 };
@@ -38,7 +41,8 @@ export const ui = {
   newProject: (area: "work" | "personal" = "work") => patch({ projectDialog: { mode: "new", area }, palette: false }),
   editProject: (id: string) => patch({ projectDialog: { mode: "edit", id } }),
   closeProject: () => patch({ projectDialog: null }),
-  openSettings: () => patch({ settings: true, palette: false, mobileNav: false }),
+  openSettings: (tab: UiState["settingsTab"] = "general") =>
+    patch({ settings: true, settingsTab: tab, palette: false, mobileNav: false }),
   closeSettings: () => patch({ settings: false }),
   setMobileNav: (open: boolean) => patch({ mobileNav: open }),
   editStages: (projectId: string | null) =>

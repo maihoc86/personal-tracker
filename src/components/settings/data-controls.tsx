@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { doneOlderThan } from "../../features/tasks/task-selectors";
 import { taskActions, useTasks } from "../../features/tasks/task-store";
 import { downloadBackup, parseBackup, restoreBackup } from "../../features/workspace/backup";
+import { autoBackupActions } from "../../features/auto-backup/auto-backup-service";
+import { AutoBackupSection } from "../../features/auto-backup/auto-backup-section";
 import { clearData, createSampleData } from "../../features/workspace/sample-data";
 import { PURGE_DAY_OPTIONS } from "../../lib/settings";
 import { Button } from "../ui/button";
@@ -38,7 +40,9 @@ export function DataControls() {
       confirmLabel: "Khôi phục",
       danger: true,
     });
-    if (ok) restoreBackup(data);
+    if (!ok) return;
+    await autoBackupActions.snapshotBeforeReset();
+    restoreBackup(data);
   }
 
   async function handlePurge() {
@@ -65,7 +69,9 @@ export function DataControls() {
       confirmLabel: "Xoá toàn bộ",
       danger: true,
     });
-    if (ok) clearData();
+    if (!ok) return;
+    await autoBackupActions.snapshotBeforeReset();
+    clearData();
   }
 
   async function handleSeed() {
@@ -75,18 +81,28 @@ export function DataControls() {
       confirmLabel: "Tạo dữ liệu mẫu",
       danger: true,
     });
-    if (ok) createSampleData();
+    if (!ok) return;
+    await autoBackupActions.snapshotBeforeReset();
+    createSampleData();
   }
 
   return (
     <div className="space-y-6">
+      <AutoBackupSection />
+
       <section>
-        <FieldLabel>Sao lưu</FieldLabel>
+        <FieldLabel>Sao lưu thủ công</FieldLabel>
         <p className="-mt-1 mb-2.5 text-[12px] leading-relaxed text-ink-faint">
           Dữ liệu chỉ nằm trong trình duyệt này. Xuất file JSON định kỳ để không mất khi xoá dữ liệu trình duyệt hoặc đổi máy.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button variant="primary" onClick={() => downloadBackup()}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              downloadBackup();
+              autoBackupActions.markExported();
+            }}
+          >
             <Download size={14} />
             Xuất JSON
           </Button>

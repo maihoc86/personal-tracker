@@ -9,7 +9,9 @@ import { StorageAlert } from "./components/shell/storage-alert";
 import { ui, useUi } from "./components/shell/ui-store";
 import { WelcomeModal } from "./components/shell/welcome-modal";
 import { focusActions, useFocusTicker } from "./features/focus/focus-store";
+import { useAutoBackupScheduler } from "./features/auto-backup/auto-backup-service";
 import { ProjectDialog } from "./features/projects/project-dialog";
+import { usePwa } from "./features/pwa/pwa";
 import { TaskPanel } from "./features/tasks/detail/task-panel";
 import { QuickAddDialog } from "./features/tasks/quick-add-dialog";
 import { WorkflowDialog } from "./features/workflow/workflow-dialog";
@@ -35,6 +37,8 @@ const LinksPage = lazy(() => import("./pages/links-page").then((m) => ({ default
 export function App() {
   useApplySettings();
   useFocusTicker();
+  useAutoBackupScheduler();
+  usePwa();
   const settings = useSettings();
   const { route, query } = useRoute();
   const { mobileNav } = useUi();

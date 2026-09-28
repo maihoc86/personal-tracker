@@ -30,6 +30,8 @@ Stack: **Vite + React 19 + TypeScript + Tailwind CSS 4**, Radix UI, dnd-kit, cmd
 | **Insights** | Hoàn thành / tạo mới / đang mở / quá hạn / giờ làm, luồng việc theo ngày-tuần, khối lượng theo dự án, ước lượng so với thực tế, việc trễ lâu nhất. Có bảng thay cho biểu đồ. |
 | **Ghi chú** | Nhiều trang Markdown (bảng, checklist), ghim, gắn dự án, tìm kiếm. |
 | **Liên kết** | Bookmark theo nhóm, tự lấy tiêu đề trang. |
+| **Sao lưu tự động** | Chọn một thư mục (nên nằm trong iCloud/Google Drive) — 1 phút sau mỗi thay đổi app ghi `personal-tracker-latest.json` + 1 bản theo ngày (giữ 14 ngày), cần Chrome/Edge. Trình duyệt tự giữ 7 bản theo ngày trong IndexedDB và bản "trước khi thay dữ liệu" trước mỗi lần xoá/khôi phục; khôi phục trong Cài đặt → Dữ liệu. Sidebar nhắc khi dữ liệu chưa có bản sao ngoài trình duyệt hoặc khi cần cấp lại quyền ghi. |
+| **Cài như ứng dụng (PWA)** | Cài từ Cài đặt → Chung hoặc biểu tượng cài trên thanh địa chỉ; chạy offline, lối tắt Hôm nay/Inbox/Ghi chú, báo "Đã có phiên bản mới" để tải lại. Chỉ hoạt động với bản build (`pnpm build && pnpm preview` hoặc khi deploy), không bật ở `pnpm dev`. |
 | **Dữ liệu** | Xuất/nhập JSON (kiểm tra & làm sạch dữ liệu khi nhập), dọn task đã xong cũ, dữ liệu mẫu, xoá toàn bộ. Dữ liệu từ phiên bản cũ được nâng cấp tự động. |
 
 ## Phím tắt
