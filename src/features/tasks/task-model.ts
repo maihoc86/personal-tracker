@@ -18,9 +18,11 @@ export type ChangeContext = {
   now: number;
   today: string;
   makeId: () => string;
+  /** Display name of a task's stage, recorded in history. */
+  stageName?: (task: Task) => string;
 };
 
-const defaultContext = (): ChangeContext => ({
+export const defaultContext = (): ChangeContext => ({
   now: Date.now(),
   today: todayIso(),
   makeId: createId,
@@ -48,6 +50,7 @@ export function createTask(
     title: draft.title.trim(),
     description: draft.description ?? "",
     status,
+    stageId: draft.stageId ?? "",
     priority: draft.priority ?? "medium",
     startDate: draft.startDate ?? "",
     dueDate: draft.dueDate ?? "",
@@ -72,7 +75,13 @@ export function diffActivity(before: Task, after: Task, ctx: ChangeContext): Act
   const push = (kind: Activity["kind"], from: string, to: string) => {
     if (from !== to) entries.push({ id: ctx.makeId(), at: ctx.now, kind, from, to });
   };
-  push("status", before.status, after.status);
+  // A stage move says more than its category ("Review → Kiểm thử"), so it
+  // replaces the status entry whenever stage names are known.
+  if (ctx.stageName && before.stageId !== after.stageId && before.stageId) {
+    push("stage", ctx.stageName(before), ctx.stageName(after));
+  } else {
+    push("status", before.status, after.status);
+  }
   push("priority", before.priority, after.priority);
   push("due", before.dueDate, after.dueDate);
   push("project", before.projectId, after.projectId);
@@ -147,6 +156,7 @@ function spawnOccurrence(done: Task, all: Task[], ctx: ChangeContext): Task {
     id: ctx.makeId(),
     number: nextNumber(all, done.projectId),
     status: "todo",
+    stageId: "",
     dueDate,
     startDate,
     checklist: done.checklist.map((c) => ({ ...c, done: false })),
@@ -205,7 +215,7 @@ function toTimeLog(v: unknown): TimeLog | null {
 
 function toActivity(v: unknown): Activity | null {
   if (!isObject(v) || typeof v.id !== "string") return null;
-  const kinds = ["created", "status", "priority", "due", "project", "recurred"] as const;
+  const kinds = ["created", "status", "stage", "priority", "due", "project", "recurred"] as const;
   if (!kinds.includes(v.kind as (typeof kinds)[number])) return null;
   return {
     id: v.id,
@@ -234,6 +244,7 @@ function toTask(v: unknown): Task | null {
     title: v.title,
     description: str(v.description),
     status,
+    stageId: str(v.stageId),
     priority: oneOf(v.priority, TASK_PRIORITIES, "medium"),
     startDate: date(v.startDate),
     dueDate,

@@ -14,11 +14,14 @@ import { openTask } from "../../lib/router";
 import { useProjects } from "../projects/project-store";
 import { Switch } from "./components/filter-bar";
 import { PriorityIcon, ProjectSwatch, StatusIcon } from "./components/task-icons";
-import { PriorityMenu, ProjectMenu, StatusMenu } from "./components/task-pickers";
+import { PriorityMenu, ProjectMenu } from "./components/task-pickers";
+import { StageMenu } from "../workflow/stage-menu";
+import { resolveStage, stagesFor } from "../workflow/workflow-model";
+import { useWorkflow } from "../workflow/workflow-store";
 import { parseQuickAdd, type QuickAddToken } from "./quick-add";
 import { projectMap, taskKey } from "./task-selectors";
 import { taskActions } from "./task-store";
-import { PRIORITY_META, STATUS_META, type TaskDraft } from "./task-types";
+import { PRIORITY_META, type TaskDraft } from "./task-types";
 
 const pill =
   "inline-flex h-7 items-center gap-1.5 rounded-[var(--radius-control)] border border-line px-2 text-[12px] font-medium text-ink-soft transition-colors hover:bg-surface-hover data-[state=open]:bg-surface-hover";
@@ -70,6 +73,11 @@ export function QuickAddDialog() {
     description,
   };
   const project = pm.get(effective.projectId ?? "");
+  const wf = useWorkflow();
+  const stages = stagesFor(wf, effective.projectId ?? "");
+  // "*dang" in the title picks by category; otherwise keep the chosen stage.
+  if (parsed.status) effective.stageId = undefined;
+  const stage = resolveStage({ stageId: effective.stageId ?? "", status: effective.status ?? "todo" }, stages);
 
   function submit() {
     if (!effective.title.trim()) {
@@ -145,12 +153,12 @@ export function QuickAddDialog() {
       </div>
 
       <div className="flex flex-wrap gap-1.5 px-4 pb-3">
-        <StatusMenu value={effective.status ?? "todo"} onChange={(status) => set({ status })}>
+        <StageMenu stages={stages} value={stage.id} onChange={(id) => set({ stageId: id, status: stages.find((x) => x.id === id)?.category })}>
           <button type="button" className={pill}>
-            <StatusIcon status={effective.status ?? "todo"} size={13} />
-            {STATUS_META[effective.status ?? "todo"].label}
+            <StatusIcon status={stage.category} color={stage.color} size={13} />
+            {stage.name}
           </button>
-        </StatusMenu>
+        </StageMenu>
         <PriorityMenu value={effective.priority ?? "medium"} onChange={(priority) => set({ priority })}>
           <button type="button" className={pill}>
             <PriorityIcon priority={effective.priority ?? "medium"} size={13} />

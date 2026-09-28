@@ -6,11 +6,14 @@ import { cn } from "../../../lib/cn";
 import { dueState, formatDayLabel, formatRelativeTime } from "../../../lib/date";
 import type { Project } from "../../projects/project-types";
 import { PriorityIcon, ProjectSwatch, StatusIcon } from "../components/task-icons";
-import { PriorityMenu, ProjectMenu, StatusMenu } from "../components/task-pickers";
+import { PriorityMenu, ProjectMenu } from "../components/task-pickers";
+import { StageMenu } from "../../workflow/stage-menu";
+import { useStagesFor } from "../../workflow/use-stages";
+import { resolveStage } from "../../workflow/workflow-model";
 import { describeRecurrence } from "../recurrence";
 import { collectTags, type ProjectMap } from "../task-selectors";
 import { taskActions } from "../task-store";
-import { PRIORITY_META, STATUS_META, type Recurrence, type Task } from "../task-types";
+import { PRIORITY_META, type Recurrence, type Task } from "../task-types";
 import { BlockersField } from "./blockers-field";
 import { Placeholder, PropertyRow } from "./property-row";
 import { propButton } from "./property-styles";
@@ -38,16 +41,18 @@ export function TaskProperties({ task, allTasks, projects, projectMap }: TaskPro
   const patch = (p: Parameters<typeof taskActions.patch>[1]) => taskActions.patch(task.id, p);
   const project = projectMap.get(task.projectId);
   const due = task.status === "done" ? "none" : dueState(task.dueDate);
+  const stages = useStagesFor(task.projectId);
+  const stage = resolveStage(task, stages);
 
   return (
     <div className="space-y-0.5">
-      <PropertyRow label="Trạng thái">
-        <StatusMenu value={task.status} onChange={(status) => patch({ status })}>
+      <PropertyRow label="Stage">
+        <StageMenu stages={stages} value={stage.id} onChange={(stageId) => taskActions.setStage(task.id, stageId)}>
           <button type="button" className={propButton}>
-            <StatusIcon status={task.status} />
-            {STATUS_META[task.status].label}
+            <StatusIcon status={task.status} color={stage.color} />
+            {stage.name}
           </button>
-        </StatusMenu>
+        </StageMenu>
       </PropertyRow>
 
       <PropertyRow label="Ưu tiên">

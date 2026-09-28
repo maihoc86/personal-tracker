@@ -103,6 +103,12 @@ function ActivityText({ activity: a, projects }: { activity: Activity; projects:
           Trạng thái {strong(STATUS_META[a.from as TaskStatus]?.label ?? "")} {arrow} {strong(STATUS_META[a.to as TaskStatus]?.label ?? "")}
         </span>
       );
+    case "stage":
+      return (
+        <span className="flex min-w-0 items-center gap-1 truncate">
+          Stage {strong(a.from ?? "")} {arrow} {strong(a.to ?? "")}
+        </span>
+      );
     case "priority":
       return (
         <span className="flex min-w-0 items-center gap-1 truncate">

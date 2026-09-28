@@ -7,6 +7,7 @@ export const DATA_KEYS = {
   bookmarks: "pt.bookmarks",
   groups: "pt.bookmark-groups",
   focus: "pt.focus",
+  workflows: "pt.workflows",
 } as const;
 
 /** Pre-workspace single scratch note; migrated into the first note page. */

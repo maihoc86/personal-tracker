@@ -11,16 +11,21 @@ type TaskCardProps = {
   /** Show the project line (cross-project views). */
   showProject?: boolean;
   blockedCount?: number;
+  /** Custom stage name shown on cross-project boards. */
+  stageLabel?: string;
   className?: string;
 };
 
 /** Board card: key + priority, title, then only the chips that carry information. */
-export function TaskCardBody({ task, taskKeyLabel, project, showProject, blockedCount = 0, className }: TaskCardProps) {
+export function TaskCardBody({ task, taskKeyLabel, project, showProject, blockedCount = 0, stageLabel, className }: TaskCardProps) {
   const done = task.status === "done";
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center gap-2">
         <TaskKeyLabel value={taskKeyLabel} />
+        {stageLabel ? (
+          <span className="truncate rounded-[4px] bg-surface-muted px-1.5 text-[10.5px] font-medium text-ink-soft">{stageLabel}</span>
+        ) : null}
         {task.priority !== "low" || !done ? (
           <PriorityIcon priority={task.priority} size={13} className="ml-auto" />
         ) : null}

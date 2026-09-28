@@ -12,6 +12,7 @@ import { focusActions, useFocusTicker } from "./features/focus/focus-store";
 import { ProjectDialog } from "./features/projects/project-dialog";
 import { TaskPanel } from "./features/tasks/detail/task-panel";
 import { QuickAddDialog } from "./features/tasks/quick-add-dialog";
+import { WorkflowDialog } from "./features/workflow/workflow-dialog";
 import { useHotkeys } from "./lib/hotkeys";
 import { isDarkTheme } from "./lib/settings";
 import { navigate, routeKey, useRoute, type Route } from "./lib/router";
@@ -99,6 +100,7 @@ export function App() {
       <QuickAddDialog />
       <CommandPalette />
       <ProjectDialog />
+      <WorkflowDialog />
       <SettingsModal />
       <WelcomeModal open={!welcomed} onClose={() => setWelcomed(true)} />
       <StorageAlert />

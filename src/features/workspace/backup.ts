@@ -8,6 +8,7 @@ import { migrateNotes, type Note } from "../notes/note-types";
 import { migrateProjects, type Project } from "../projects/project-types";
 import { migrateTasks } from "../tasks/task-model";
 import type { Task } from "../tasks/task-types";
+import { migrateWorkflow, type WorkflowState } from "../workflow/workflow-model";
 
 export const BACKUP_APP = "personal-tracker";
 export const BACKUP_VERSION = 2;
@@ -21,6 +22,7 @@ export type BackupData = {
   groups: string[];
   focus: FocusState;
   settings: Settings;
+  workflows: WorkflowState;
 };
 
 export type BackupFile = {
@@ -48,6 +50,7 @@ export function createBackup(now = new Date()): BackupFile {
       bookmarks: readStorage(DATA_KEYS.bookmarks) ?? [],
       groups: readStorage(DATA_KEYS.groups) ?? [],
       focus: readStorage(DATA_KEYS.focus) ?? null,
+      workflows: readStorage(DATA_KEYS.workflows) ?? null,
       settings: readStorage(SETTINGS_KEY) ?? null,
     },
   };
@@ -91,6 +94,7 @@ export function parseBackup(text: string): ParsedBackup {
       groups: migrateGroups(d.groups),
       focus: migrateFocus(d.focus),
       settings: normalizeSettings(d.settings),
+      workflows: migrateWorkflow(d.workflows),
     },
   };
 }
@@ -107,6 +111,7 @@ export function restoreBackup(data: BackupData) {
   store.setItem(DATA_KEYS.groups, JSON.stringify(data.groups));
   store.setItem(DATA_KEYS.focus, JSON.stringify({ ...data.focus, running: false, endsAt: null }));
   store.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+  store.setItem(DATA_KEYS.workflows, JSON.stringify(data.workflows));
   store.removeItem(LEGACY_NOTE_KEY);
   window.location.reload();
 }

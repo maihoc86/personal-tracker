@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { projectActions, projectStore } from "../projects/project-store";
 import { taskActions, taskStore } from "./task-store";
+import { workflowActions } from "../workflow/workflow-actions";
+import { initialWorkflow } from "../workflow/workflow-model";
+import { workflowStore } from "../workflow/workflow-store";
 
 vi.mock("sonner", () => ({ toast: vi.fn() }));
 
@@ -8,6 +11,7 @@ beforeEach(() => {
   window.localStorage.clear();
   taskStore.set([]);
   projectStore.set([]);
+  workflowStore.set(initialWorkflow());
 });
 
 describe("taskActions", () => {
@@ -24,7 +28,44 @@ describe("taskActions", () => {
     taskActions.patch(t.id, { status: "done" });
     const saved = taskStore.get()[0];
     expect(saved.doneAt).toBeTypeOf("number");
-    expect(saved.activity.map((a) => a.kind)).toEqual(["created", "status"]);
+    expect(saved.activity.map((a) => [a.kind, a.from, a.to])).toEqual([
+      ["created", undefined, undefined],
+      ["stage", "Cần làm", "Hoàn thành"],
+    ]);
+    expect(saved.stageId).toBe("done");
+  });
+
+  it("moves between custom stages and follows the stage category", () => {
+    const p = projectActions.add({ name: "Web", key: "WEB", color: "#111111", area: "work" });
+    workflowActions.setProjectStages(p.id, [
+      { id: "td", name: "Cần làm", category: "todo" },
+      { id: "dev", name: "Dev", category: "doing" },
+      { id: "rv", name: "Review", category: "doing" },
+      { id: "ok", name: "Xong", category: "done" },
+    ]);
+    const t = taskActions.add({ title: "x", projectId: p.id });
+    expect(taskStore.get()[0]).toMatchObject({ stageId: "td", status: "todo" });
+    taskActions.setStage(t.id, "rv");
+    taskActions.setStage(t.id, "missing");
+    expect(taskStore.get()[0]).toMatchObject({ stageId: "rv", status: "doing" });
+    expect(taskStore.get()[0].activity.at(-1)).toMatchObject({ kind: "stage", from: "Cần làm", to: "Review" });
+  });
+
+  it("re-homes tasks when a stage is removed or the project goes back to the default", () => {
+    const p = projectActions.add({ name: "Web", key: "WEB", color: "#111111", area: "work" });
+    const custom = [
+      { id: "td", name: "Cần làm", category: "todo" as const },
+      { id: "rv", name: "Review", category: "doing" as const },
+      { id: "ok", name: "Xong", category: "done" as const },
+    ];
+    workflowActions.setProjectStages(p.id, custom);
+    const t = taskActions.add({ title: "x", projectId: p.id, stageId: "rv" });
+    workflowActions.setProjectStages(p.id, custom.map((s) => (s.id === "rv" ? { ...s, category: "todo" as const } : s)));
+    expect(taskStore.get()[0]).toMatchObject({ stageId: "rv", status: "todo" });
+    workflowActions.setProjectStages(p.id, null);
+    expect(taskStore.get().find((x) => x.id === t.id)).toMatchObject({ stageId: "todo", status: "todo" });
+    projectActions.remove(p.id);
+    expect(workflowStore.get().byProject).toEqual({});
   });
 
   it("patches many tasks at once", () => {

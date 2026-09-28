@@ -9,6 +9,7 @@ import type { Habit } from "../habits/use-habits";
 import type { Note } from "../notes/note-types";
 import type { Project } from "../projects/project-types";
 import type { Task, TaskPriority, TaskStatus } from "../tasks/task-types";
+import { DEFAULT_STAGES, reconcileStages, type Stage, type WorkflowState } from "../workflow/workflow-model";
 
 const DAY = 86_400_000;
 
@@ -20,7 +21,23 @@ export type SampleData = {
   bookmarks: Bookmark[];
   groups: string[];
   focus: FocusState;
+  workflows: WorkflowState;
 };
+
+/** A software workflow for the client website, a light one for the family. */
+const WEB_STAGES: Stage[] = [
+  { id: "web-backlog", name: "Backlog", category: "backlog" },
+  { id: "web-todo", name: "Cần làm", category: "todo" },
+  { id: "web-doing", name: "Đang làm", category: "doing", wipLimit: 3 },
+  { id: "web-review", name: "Review", category: "doing", color: "#6e56cf" },
+  { id: "web-qa", name: "Kiểm thử", category: "doing", color: "#0e7c86" },
+  { id: "web-done", name: "Hoàn thành", category: "done" },
+];
+const HOME_STAGES: Stage[] = [
+  { id: "home-todo", name: "Cần làm", category: "todo" },
+  { id: "home-doing", name: "Đang làm", category: "doing" },
+  { id: "home-done", name: "Xong", category: "done" },
+];
 
 type ProjectSeed = [ref: string, name: string, key: string, color: string, area: Project["area"]];
 
@@ -49,12 +66,14 @@ type TaskSeed = {
   doneDaysAgo?: number;
   recurrence?: Task["recurrence"];
   blockedBy?: string[];
+  /** Explicit custom stage id (otherwise picked from the status). */
+  stage?: string;
 };
 
 const TASKS: TaskSeed[] = [
   { ref: "scope", project: "web", title: "Chốt phạm vi giai đoạn 2 với khách", status: "doing", priority: "high",
     description: "Thống nhất danh sách tính năng, mốc bàn giao và chi phí phát sinh.\n\n- Gửi bản ước lượng trước buổi họp\n- Ghi biên bản và xin xác nhận qua email",
-    start: -3, due: 1, estimate: 3, tags: ["họp"], logged: [90],
+    start: -3, due: 1, estimate: 3, tags: ["họp"], logged: [90], stage: "web-review",
     checklist: [["Tổng hợp yêu cầu", true], ["Ước lượng effort", true], ["Gửi biên bản", false]],
     comments: ["Khách muốn thêm cổng thanh toán nội địa, cần tách thành change request."] },
   { ref: "checkout", project: "web", title: "Thiết kế lại trang thanh toán", status: "todo", priority: "high",
@@ -62,6 +81,7 @@ const TASKS: TaskSeed[] = [
   { ref: "login", project: "web", title: "Sửa lỗi đăng nhập Google trên Safari", status: "todo", priority: "urgent",
     description: "Popup bị chặn trên Safari 18, cần chuyển sang redirect flow.", due: 0, dueTime: "17:00", estimate: 2, tags: ["bug"] },
   { ref: "api-doc", project: "web", title: "Viết tài liệu API cho đối tác", status: "backlog", priority: "medium", due: 14, estimate: 6, tags: ["tài liệu"] },
+  { ref: "qa", project: "web", title: "Kiểm thử luồng đăng ký trên mobile", status: "doing", priority: "medium", start: -2, due: 3, estimate: 3, tags: ["qa"], stage: "web-qa" },
   { ref: "demo", project: "web", title: "Demo sprint cho khách hàng", status: "todo", priority: "medium", start: 4, due: 5, dueTime: "15:00", estimate: 1.5, tags: ["họp"] },
   { ref: "perf", project: "web", title: "Kiểm thử hiệu năng trang chủ", status: "done", priority: "medium", start: -7, due: -3, estimate: 4, logged: [120, 110, 70], doneDaysAgo: 2 },
   { ref: "ci", project: "web", title: "Cấu hình CI/CD cho staging", status: "done", priority: "high", start: -9, due: -6, estimate: 5, logged: [150, 90], doneDaysAgo: 5 },
@@ -134,7 +154,12 @@ export function buildSampleData(today = todayIso(), now = Date.now()): SampleDat
 
   const taskIds = new Map(TASKS.map((t) => [t.ref, createId()]));
   const counters = new Map<string, number>();
-  const tasks = TASKS.map((seed, i) => buildTask(seed, i));
+  const workflows: WorkflowState = {
+    defaultStages: DEFAULT_STAGES,
+    byProject: { [projectIds.get("web")!]: WEB_STAGES, [projectIds.get("home")!]: HOME_STAGES },
+  };
+  const built = TASKS.map((seed, i) => buildTask(seed, i));
+  const tasks = reconcileStages(built, built, workflows);
 
   function buildTask(seed: TaskSeed, i: number): Task {
     const projectId = seed.project ? projectIds.get(seed.project)! : "";
@@ -148,6 +173,7 @@ export function buildSampleData(today = todayIso(), now = Date.now()): SampleDat
       title: seed.title,
       description: seed.description ?? "",
       status: seed.status,
+      stageId: seed.stage ?? "",
       priority: seed.priority,
       startDate: seed.start !== undefined ? addDaysIso(today, seed.start) : "",
       dueDate: seed.due !== undefined ? addDaysIso(today, seed.due) : "",
@@ -204,6 +230,7 @@ export function buildSampleData(today = todayIso(), now = Date.now()): SampleDat
   return {
     projects, tasks, notes, habits, bookmarks, groups,
     focus: { ...initialFocus(), sessions },
+    workflows,
   };
 }
 
@@ -218,6 +245,7 @@ export function writeSampleData() {
   store.setItem(DATA_KEYS.bookmarks, JSON.stringify(data.bookmarks));
   store.setItem(DATA_KEYS.groups, JSON.stringify(data.groups));
   store.setItem(DATA_KEYS.focus, JSON.stringify(data.focus));
+  store.setItem(DATA_KEYS.workflows, JSON.stringify(data.workflows));
   store.removeItem(LEGACY_NOTE_KEY);
 }
 

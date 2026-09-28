@@ -8,7 +8,7 @@ const at = (iso: string, h = 10) => new Date(`${iso}T${String(h).padStart(2, "0"
 
 function t(id: string, o: Partial<Task> = {}): Task {
   return {
-    id, number: 1, projectId: "", title: id, description: "", status: "todo", priority: "medium",
+    id, number: 1, projectId: "", title: id, description: "", status: "todo", stageId: "", priority: "medium",
     startDate: "", dueDate: "", dueTime: "", tags: [], checklist: [], comments: [], timeLogs: [],
     activity: [], blockedBy: [], createdAt: at("2026-09-01"), updatedAt: 0, ...o,
   };

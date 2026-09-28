@@ -23,6 +23,15 @@ describe("buildSampleData", () => {
     expect(data.tasks.some((t) => t.projectId === "")).toBe(true);
   });
 
+  it("gives every task a stage that matches its status", () => {
+    for (const t of data.tasks) {
+      const stages = data.workflows.byProject[t.projectId] ?? data.workflows.defaultStages;
+      const stage = stages.find((s) => s.id === t.stageId);
+      expect(stage?.category).toBe(t.status);
+    }
+    expect(data.tasks.some((t) => t.stageId === "web-review")).toBe(true);
+  });
+
   it("includes material for every view", () => {
     expect(data.tasks.some((t) => t.status === "done" && t.timeLogs.length)).toBe(true);
     expect(data.tasks.some((t) => t.recurrence)).toBe(true);

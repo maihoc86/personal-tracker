@@ -23,9 +23,12 @@ export type TimeLog = {
   source: "manual" | "focus";
 };
 
-export type ActivityKind = "created" | "status" | "priority" | "due" | "project" | "recurred";
+export type ActivityKind = "created" | "status" | "stage" | "priority" | "due" | "project" | "recurred";
 
-/** Automatic history entry; `from`/`to` hold raw values the UI turns into labels. */
+/**
+ * Automatic history entry; `from`/`to` hold raw values the UI turns into
+ * labels (stage entries store stage names so history survives deletions).
+ */
 export type Activity = {
   id: string;
   at: number;
@@ -42,7 +45,10 @@ export type Task = {
   projectId: string;
   title: string;
   description: string;
+  /** Category of the current stage — what progress logic relies on. */
   status: TaskStatus;
+  /** Custom workflow stage (board column); "" until first assigned. */
+  stageId: string;
   priority: TaskPriority;
   /** ISO yyyy-mm-dd or "" — when work is planned to start (timeline). */
   startDate: string;
@@ -73,6 +79,7 @@ export type TaskDraft = Partial<
     | "projectId"
     | "description"
     | "status"
+    | "stageId"
     | "priority"
     | "startDate"
     | "dueDate"

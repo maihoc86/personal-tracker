@@ -1,5 +1,5 @@
 import { FolderX, Inbox, Layers, MoreHorizontal, Plus } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { EmptyState, PageHeader } from "../components/shell/page-header";
 import { ui } from "../components/shell/ui-store";
 import { Button } from "../components/ui/button";
@@ -19,9 +19,11 @@ import {
   type Scope,
 } from "../features/tasks/task-selectors";
 import { useTasks } from "../features/tasks/task-store";
-import type { TaskDraft } from "../features/tasks/task-types";
+import { STATUS_META, TASK_STATUSES, type Task, type TaskDraft } from "../features/tasks/task-types";
+import { resolveStage, stagesFor } from "../features/workflow/workflow-model";
+import { useWorkflow } from "../features/workflow/workflow-store";
 import { useViewPrefs } from "../features/tasks/use-view-prefs";
-import { BoardView } from "../features/tasks/views/board-view";
+import { BoardView, type BoardColumn } from "../features/tasks/views/board-view";
 import { CalendarView } from "../features/tasks/views/calendar-view";
 import { ListView } from "../features/tasks/views/list-view";
 import { TimelineView } from "../features/tasks/views/timeline-view";
@@ -37,6 +39,7 @@ export function TaskScopePage({ route }: { route: ScopeRoute }) {
   const tasks = useTasks();
   const projects = useProjects();
   const settings = useSettings();
+  const wf = useWorkflow();
   const pm = useMemo(() => projectMap(projects), [projects]);
   const project = route.name === "project" ? pm.get(route.id) : undefined;
   const { prefs, setPrefs, filter, setFilter } = useViewPrefs(routeKey(route), {
@@ -54,6 +57,28 @@ export function TaskScopePage({ route }: { route: ScopeRoute }) {
     [filtered, prefs.showDone, prefs.sortBy],
   );
   const tags = useMemo(() => collectTags(scoped), [scoped]);
+
+  // One project (or the Inbox) has one workflow, so its board columns are
+  // its stages; "All tasks" mixes workflows and falls back to the 4 groups.
+  const stages = useMemo(
+    () => (route.name === "project" ? stagesFor(wf, route.id) : route.name === "inbox" ? wf.defaultStages : undefined),
+    [wf, route],
+  );
+  const columns = useMemo<BoardColumn[]>(
+    () =>
+      stages
+        ? stages.map((s) => ({ id: s.id, label: s.name, category: s.category, color: s.color, wipLimit: s.wipLimit }))
+        : TASK_STATUSES.map((c) => ({ id: c, label: STATUS_META[c].label, category: c })),
+    [stages],
+  );
+  const columnOf = useCallback((t: Task) => (stages ? resolveStage(t, stages).id : t.status), [stages]);
+  const cardLabel = useCallback(
+    (t: Task) => {
+      const name = resolveStage(t, stagesFor(wf, t.projectId)).name;
+      return name !== STATUS_META[t.status].label ? name : undefined;
+    },
+    [wf],
+  );
 
   if (route.name === "project" && !project) {
     return (
@@ -138,13 +163,18 @@ export function TaskScopePage({ route }: { route: ScopeRoute }) {
           />
         ) : prefs.view === "board" ? (
           <BoardView
+            columns={columns}
+            mode={stages ? "stage" : "category"}
+            columnOf={columnOf}
+            cardLabel={stages ? undefined : cardLabel}
+            onEditStages={stages ? () => ui.editStages(project?.id ?? null) : undefined}
             tasks={visible}
             allTasks={tasks}
             projects={pm}
             showProject={multiProject}
             sortable={prefs.sortBy === "manual"}
             archiveDays={settings.archiveDays}
-            onAdd={(status) => add({ status })}
+            onAdd={(column) => add(stages ? { stageId: column.id, status: column.category } : { status: column.category })}
           />
         ) : prefs.view === "list" ? (
           <ListView
@@ -154,6 +184,7 @@ export function TaskScopePage({ route }: { route: ScopeRoute }) {
             projects={projects}
             projectMap={pm}
             showProject={multiProject}
+            stages={stages}
             onAdd={add}
           />
         ) : prefs.view === "calendar" ? (

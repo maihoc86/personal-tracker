@@ -13,6 +13,8 @@ type UiState = {
   projectDialog: { mode: "new"; area: "work" | "personal" } | { mode: "edit"; id: string } | null;
   settings: boolean;
   mobileNav: boolean;
+  /** Stage editor: the default workflow or one project's. */
+  workflowDialog: { scope: "default" } | { scope: "project"; id: string } | null;
 };
 
 const initial: UiState = {
@@ -21,6 +23,7 @@ const initial: UiState = {
   projectDialog: null,
   settings: false,
   mobileNav: false,
+  workflowDialog: null,
 };
 
 export const uiStore = createMemoryStore<UiState>(initial);
@@ -38,6 +41,9 @@ export const ui = {
   openSettings: () => patch({ settings: true, palette: false, mobileNav: false }),
   closeSettings: () => patch({ settings: false }),
   setMobileNav: (open: boolean) => patch({ mobileNav: open }),
+  editStages: (projectId: string | null) =>
+    patch({ workflowDialog: projectId ? { scope: "project", id: projectId } : { scope: "default" }, palette: false }),
+  closeStages: () => patch({ workflowDialog: null }),
 };
 
 export function useUi(): UiState {

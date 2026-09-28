@@ -1,4 +1,4 @@
-import { Archive, Pencil, Trash2 } from "lucide-react";
+import { Archive, Columns3, Pencil, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { ui } from "../../components/shell/ui-store";
@@ -44,6 +44,9 @@ export function ProjectActionsMenu({
       <MenuContent align="start" side={side}>
         <MenuItem icon={<Pencil size={14} />} onSelect={() => ui.editProject(project.id)}>
           Sửa dự án
+        </MenuItem>
+        <MenuItem icon={<Columns3 size={14} />} onSelect={() => ui.editStages(project.id)}>
+          Tuỳ chỉnh stage
         </MenuItem>
         <MenuItem icon={<Archive size={14} />} onSelect={toggleArchive}>
           {project.archived ? "Bỏ lưu trữ" : "Lưu trữ"}

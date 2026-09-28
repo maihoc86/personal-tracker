@@ -6,8 +6,19 @@ import type { TaskPriority, TaskStatus } from "../task-types";
  * (ready), half (in progress), filled check (done) — so a column of them
  * scans without reading labels.
  */
-export function StatusIcon({ status, size = 14, className }: { status: TaskStatus; size?: number; className?: string }) {
-  const common = { width: size, height: size, viewBox: "0 0 16 16", "aria-hidden": true } as const;
+export function StatusIcon({
+  status,
+  size = 14,
+  className,
+  color,
+}: {
+  status: TaskStatus;
+  size?: number;
+  className?: string;
+  /** Custom stage tint; replaces the category colour. */
+  color?: string;
+}) {
+  const common = { width: size, height: size, viewBox: "0 0 16 16", "aria-hidden": true, style: color ? { color } : undefined } as const;
   if (status === "done") {
     return (
       <svg {...common} className={cn("shrink-0 text-accent", className)}>

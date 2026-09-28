@@ -5,6 +5,7 @@ import {
   checklistProgress,
   collectTags,
   doneOlderThan,
+  groupByStages,
   filterTasks,
   groupTasks,
   isFilterActive,
@@ -30,6 +31,7 @@ function t(id: string, o: Partial<Task> = {}): Task {
     title: id,
     description: "",
     status: "todo",
+    stageId: "",
     priority: "medium",
     startDate: "",
     dueDate: "",
@@ -237,5 +239,22 @@ describe("doneOlderThan", () => {
       t("open", { doneAt: 1 }),
     ];
     expect(doneOlderThan(tasks, 30, now).map((x) => x.id)).toEqual(["old"]);
+  });
+});
+
+describe("groupByStages", () => {
+  it("groups by stage, falling back by status for unassigned tasks", () => {
+    const stages = [
+      { id: "td", name: "Cần làm", category: "todo" as const },
+      { id: "rv", name: "Review", category: "doing" as const, color: "#123456" },
+      { id: "ok", name: "Xong", category: "done" as const },
+    ];
+    const groups = groupByStages([t("a", { stageId: "rv", status: "doing" }), t("b"), t("c", { status: "done" })], stages);
+    expect(groups.map((g) => [g.id, g.tasks.map((x) => x.id)])).toEqual([
+      ["td", ["b"]],
+      ["rv", ["a"]],
+      ["ok", ["c"]],
+    ]);
+    expect(groups[1].color).toBe("#123456");
   });
 });

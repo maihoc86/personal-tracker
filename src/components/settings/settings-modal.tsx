@@ -1,4 +1,7 @@
-import { Database, Keyboard, Palette, SlidersHorizontal } from "lucide-react";
+import { Columns3, Database, Keyboard, Palette, SlidersHorizontal } from "lucide-react";
+import { StatusIcon } from "../../features/tasks/components/task-icons";
+import { useWorkflow } from "../../features/workflow/workflow-store";
+import { Button } from "../ui/button";
 import { useState, type ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { ARCHIVE_DAY_OPTIONS } from "../../lib/settings";
@@ -12,11 +15,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { AppearanceControls } from "./appearance-controls";
 import { DataControls } from "./data-controls";
 
-type Tab = "general" | "appearance" | "data" | "shortcuts";
+type Tab = "general" | "appearance" | "workflow" | "data" | "shortcuts";
 
 const TABS: { id: Tab; label: string; icon: ReactNode }[] = [
   { id: "general", label: "Chung", icon: <SlidersHorizontal size={14} /> },
   { id: "appearance", label: "Giao diện", icon: <Palette size={14} /> },
+  { id: "workflow", label: "Workflow", icon: <Columns3 size={14} /> },
   { id: "data", label: "Dữ liệu", icon: <Database size={14} /> },
   { id: "shortcuts", label: "Phím tắt", icon: <Keyboard size={14} /> },
 ];
@@ -91,6 +95,8 @@ export function SettingsModal() {
             </div>
           ) : tab === "appearance" ? (
             <AppearanceControls settings={settings} onUpdate={updateSettings} onPreview={setPeek} />
+          ) : tab === "workflow" ? (
+            <WorkflowSummary />
           ) : tab === "data" ? (
             <DataControls />
           ) : (
@@ -110,5 +116,36 @@ export function SettingsModal() {
         </div>
       </div>
     </Modal>
+  );
+}
+
+/** Default stages at a glance, plus which projects run their own. */
+function WorkflowSummary() {
+  const wf = useWorkflow();
+  const custom = Object.keys(wf.byProject).length;
+  return (
+    <div className="space-y-4">
+      <p className="text-[12.5px] leading-relaxed text-ink-faint">
+        Workflow mặc định dùng cho Inbox và dự án mới. Mỗi dự án có thể có bộ stage riêng (menu ··· của dự án → Tuỳ chỉnh stage).
+      </p>
+      <ol className="divide-y divide-line rounded-[10px] border border-line">
+        {wf.defaultStages.map((s) => (
+          <li key={s.id} className="flex h-9 items-center gap-2.5 px-3 text-[13px]">
+            <StatusIcon status={s.category} color={s.color} />
+            <span className="flex-1 text-ink">{s.name}</span>
+            {s.wipLimit ? <span className="font-mono text-[11px] text-ink-faint">WIP {s.wipLimit}</span> : null}
+          </li>
+        ))}
+      </ol>
+      <div className="flex items-center justify-between">
+        <span className="text-[12px] text-ink-faint">{custom ? `${custom} dự án đang dùng bộ stage riêng` : "Chưa có dự án nào dùng bộ stage riêng"}</span>
+        <Button variant="primary" onClick={() => {
+          ui.closeSettings();
+          ui.editStages(null);
+        }}>
+          Chỉnh sửa workflow mặc định
+        </Button>
+      </div>
+    </div>
   );
 }

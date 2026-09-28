@@ -1,8 +1,9 @@
 import { DATA_KEYS } from "../../lib/data-keys";
 import { createId } from "../../lib/id";
 import { createPersistedStore, useStore } from "../../lib/store";
-import { taskStore } from "../tasks/task-store";
+import { taskActions, taskStore } from "../tasks/task-store";
 import { applyTaskChanges } from "../tasks/task-model";
+import { workflowActions } from "../workflow/workflow-actions";
 import { cleanKey, migrateProjects, suggestKey, type Project, type ProjectDraft } from "./project-types";
 
 export const projectStore = createPersistedStore<Project[]>(DATA_KEYS.projects, [], {
@@ -57,6 +58,8 @@ export const projectActions = {
       ),
     );
     projectStore.set((prev) => prev.filter((p) => p.id !== id));
+    workflowActions.dropProject(id);
+    taskActions.syncStages();
   },
 
   /** Persist a new sidebar order. */

@@ -167,6 +167,9 @@ function PaletteItems({ query, onDone }: { query: string; onDone: () => void }) 
         <Item value="doi giao dien sang toi" keywords={["theme", "dark", "light"]} onSelect={run(() => updateSettings({ theme: dark ? "light" : "dark" }))} icon={dark ? <Sun size={15} /> : <Moon size={15} />}>
           {dark ? "Chuyển giao diện sáng" : "Chuyển giao diện tối"}
         </Item>
+        <Item value="tuy chinh stage workflow" keywords={["stage", "column", "cot", "quy trinh"]} onSelect={run(() => ui.editStages(routeProjectId()))} icon={<Settings size={15} />}>
+          Tuỳ chỉnh stage{routeProjectId() ? " của dự án này" : " (mặc định)"}
+        </Item>
         <Item value="cai dat" keywords={["settings"]} onSelect={run(ui.openSettings)} icon={<Settings size={15} />}>
           Mở cài đặt
         </Item>
@@ -176,6 +179,12 @@ function PaletteItems({ query, onDone }: { query: string; onDone: () => void }) 
       </Command.Group>
     </>
   );
+}
+
+/** Project id of the page behind the palette, if it is a project page. */
+function routeProjectId(): string | null {
+  const m = /^#\/project\/([^?]+)/.exec(window.location.hash);
+  return m ? decodeURIComponent(m[1]) : null;
 }
 
 function Item({

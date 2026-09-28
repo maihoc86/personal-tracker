@@ -1,6 +1,7 @@
 import { addDaysIso, diffDays, dueState } from "../../lib/date";
 import { matchesQuery } from "../../lib/text";
 import { AREA_META, INBOX_KEY, type Area, type Project } from "../projects/project-types";
+import { resolveStage, type Stage } from "../workflow/workflow-model";
 import {
   PRIORITY_META,
   STATUS_META,
@@ -222,6 +223,16 @@ export function groupTasks(
       return groups.filter((g) => g.tasks.length);
     }
   }
+}
+
+/** One group per stage of a single workflow (all stages kept, even empty). */
+export function groupByStages(tasks: Task[], stages: Stage[]): TaskGroup[] {
+  return stages.map((stage) => ({
+    id: stage.id,
+    label: stage.name,
+    color: stage.color,
+    tasks: tasks.filter((t) => resolveStage(t, stages).id === stage.id),
+  }));
 }
 
 // --- today ------------------------------------------------------------------

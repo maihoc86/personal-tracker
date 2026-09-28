@@ -19,6 +19,7 @@ Stack: **Vite + React 19 + TypeScript + Tailwind CSS 4**, Radix UI, dnd-kit, cmd
 | Khu vực | Có gì |
 |---|---|
 | **Dự án** | Chia theo khu vực *Công việc* / *Cá nhân*, mỗi dự án có màu và **mã** (vd `WEB`) → task có mã `WEB-12`. Sửa, lưu trữ, xoá (task chuyển về Inbox). |
+| **Custom stage** | Mỗi dự án có workflow riêng (vd Backlog → Cần làm → Đang làm → Review → Kiểm thử → Hoàn thành), Inbox và dự án mới dùng workflow mặc định. Stage có tên, màu, **giới hạn WIP**, thuộc 1 trong 4 nhóm (Chưa lên kế hoạch / Cần làm / Đang làm / Hoàn thành) để Hôm nay, Insights, việc lặp lại vẫn hiểu tiến độ. Kéo để sắp xếp, có mẫu sẵn; xoá stage thì task tự chuyển sang stage cùng nhóm. Board của dự án chia cột theo stage; "Tất cả task" gom theo 4 nhóm kèm nhãn stage. |
 | **Hôm nay** | Quá hạn · hạn hôm nay · đang làm · 7 ngày tới · xong hôm nay; lọc theo khu vực; tick để hoàn thành (có hoàn tác); widget Focus + thói quen. |
 | **4 view** cho Inbox / Tất cả / từng dự án | **Board** (kéo-thả, tổng giờ ước lượng mỗi cột), **Danh sách** (nhóm theo trạng thái/dự án/ưu tiên/hạn, đổi trạng thái/ưu tiên ngay trên dòng), **Lịch** (kéo task sang ngày khác để dời hạn), **Timeline** (Gantt: kéo để dời, kéo mép để đổi ngày). Bộ lọc chữ/trạng thái/ưu tiên/hạn/tag, nhớ theo từng trang. |
 | **Chi tiết task** | Panel trượt bên phải, deep-link `#/…?task=id`: mô tả Markdown, checklist, bình luận + nhật ký hoạt động tự ghi, ngày bắt đầu/hạn/giờ, ước lượng vs giờ đã log, lặp lại, "bị chặn bởi", tag. |

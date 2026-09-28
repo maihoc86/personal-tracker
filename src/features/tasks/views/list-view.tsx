@@ -7,8 +7,11 @@ import { openTask } from "../../../lib/router";
 import type { Project } from "../../projects/project-types";
 import { BlockedChip, ChecklistChip, DueChip, RecurrenceChip, TagChip, TaskKeyLabel, TimeChip } from "../components/task-chips";
 import { PriorityIcon, ProjectSwatch, StatusIcon } from "../components/task-icons";
-import { PriorityMenu, StatusMenu } from "../components/task-pickers";
-import { groupTasks, openBlockers, taskKey, type GroupBy, type ProjectMap, type TaskGroup } from "../task-selectors";
+import { PriorityMenu } from "../components/task-pickers";
+import { StageMenu } from "../../workflow/stage-menu";
+import { useStageResolver } from "../../workflow/use-stages";
+import type { Stage } from "../../workflow/workflow-model";
+import { groupByStages, groupTasks, openBlockers, taskKey, type GroupBy, type ProjectMap, type TaskGroup } from "../task-selectors";
 import { taskActions } from "../task-store";
 import type { Task, TaskDraft, TaskStatus } from "../task-types";
 
@@ -19,13 +22,20 @@ type ListViewProps = {
   projects: Project[];
   projectMap: ProjectMap;
   showProject: boolean;
+  /** Set when the page has a single workflow: status groups become its stages. */
+  stages?: Stage[];
   onAdd: (prefill: Partial<TaskDraft>) => void;
 };
 
 /** Dense grouped rows (Linear-style) with inline status/priority changes. */
-export function ListView({ tasks, allTasks, groupBy, projects, projectMap, showProject, onAdd }: ListViewProps) {
+export function ListView({ tasks, allTasks, groupBy, projects, projectMap, showProject, stages, onAdd }: ListViewProps) {
   const today = todayIso();
-  const groups = useMemo(() => groupTasks(tasks, groupBy, { today, projects }), [tasks, groupBy, today, projects]);
+  const byStage = groupBy === "status" && !!stages;
+  const groups = useMemo(
+    () => (byStage ? groupByStages(tasks, stages!) : groupTasks(tasks, groupBy, { today, projects })),
+    [tasks, groupBy, today, projects, stages, byStage],
+  );
+  const stageMap = useMemo(() => new Map((stages ?? []).map((s) => [s.id, s])), [stages]);
   const allById = useMemo(() => new Map(allTasks.map((t) => [t.id, t])), [allTasks]);
 
   return (
@@ -35,7 +45,8 @@ export function ListView({ tasks, allTasks, groupBy, projects, projectMap, showP
           key={g.id}
           group={g}
           groupBy={groupBy}
-          onAdd={() => onAdd(prefillFor(groupBy, g))}
+          stage={byStage ? stageMap.get(g.id) : undefined}
+          onAdd={() => onAdd(byStage ? { stageId: g.id } : prefillFor(groupBy, g))}
           renderRow={(t) => (
             <Row
               key={t.id}
@@ -62,11 +73,13 @@ function prefillFor(groupBy: GroupBy, g: TaskGroup): Partial<TaskDraft> {
 function Group({
   group,
   groupBy,
+  stage,
   onAdd,
   renderRow,
 }: {
   group: TaskGroup;
   groupBy: GroupBy;
+  stage?: Stage;
   onAdd: () => void;
   renderRow: (t: Task) => React.ReactNode;
 }) {
@@ -83,7 +96,7 @@ function Group({
             className="flex min-w-0 items-center gap-2 rounded-[6px] px-1 py-1 text-[13px] font-semibold text-ink hover:bg-surface-hover"
           >
             <ChevronRight size={13} className={cn("shrink-0 text-ink-faint transition-transform", open && "rotate-90")} />
-            <GroupMarker groupBy={groupBy} group={group} />
+            {stage ? <StatusIcon status={stage.category} color={stage.color} /> : <GroupMarker groupBy={groupBy} group={group} />}
             <span className="truncate">{group.label}</span>
           </button>
           <span className="font-mono text-[11px] tabular-nums text-ink-faint">{group.tasks.length}</span>
@@ -124,6 +137,8 @@ function Row({
   blocked: number;
 }) {
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const { stagesOf, stageOf } = useStageResolver();
+  const stage = stageOf(task);
   return (
     <div
       role="listitem"
@@ -140,11 +155,11 @@ function Row({
         </button>
       </PriorityMenu>
       <TaskKeyLabel value={keyLabel} className="hidden w-[64px] sm:block" />
-      <StatusMenu value={task.status} onChange={(status) => taskActions.patch(task.id, { status })}>
-        <button type="button" onClick={stop} aria-label="Đổi trạng thái" className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] hover:bg-surface-hover">
-          <StatusIcon status={task.status} />
+      <StageMenu stages={stagesOf(task)} value={stage.id} onChange={(stageId) => taskActions.setStage(task.id, stageId)}>
+        <button type="button" onClick={stop} aria-label={`Stage: ${stage.name}`} title={stage.name} className="grid h-6 w-6 shrink-0 place-items-center rounded-[5px] hover:bg-surface-hover">
+          <StatusIcon status={task.status} color={stage.color} />
         </button>
-      </StatusMenu>
+      </StageMenu>
       <span className={cn("min-w-0 flex-1 truncate text-[13px]", task.status === "done" ? "text-ink-faint line-through decoration-ink-faint/50" : "text-ink")}>
         {task.title}
       </span>

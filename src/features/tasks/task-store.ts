@@ -1,7 +1,9 @@
 import { DATA_KEYS } from "../../lib/data-keys";
 import { createId } from "../../lib/id";
 import { createPersistedStore, useStore } from "../../lib/store";
-import { applyTaskChanges, createTask, migrateTasks } from "./task-model";
+import { reconcileStages, resolveStage, stagesFor } from "../workflow/workflow-model";
+import { workflowStore } from "../workflow/workflow-store";
+import { applyTaskChanges, createTask, defaultContext, migrateTasks } from "./task-model";
 import type { Task, TaskDraft, TaskPatch, TimeLog } from "./task-types";
 
 /** Single source of truth for tasks, shared by every page and view. */
@@ -9,9 +11,19 @@ export const taskStore = createPersistedStore<Task[]>(DATA_KEYS.todos, [], {
   normalize: migrateTasks,
 });
 
-/** Apply a change through the bookkeeping in applyTaskChanges. */
+/**
+ * Apply a change through the bookkeeping: keep stage and status consistent
+ * with the task's workflow, then applyTaskChanges (history, numbering,
+ * recurrence), then place any spawned occurrence in a stage.
+ */
 function commit(update: (prev: Task[]) => Task[]) {
-  taskStore.set((prev) => applyTaskChanges(prev, update(prev)));
+  const wf = workflowStore.get();
+  const stageName = (t: Task) => resolveStage(t, stagesFor(wf, t.projectId)).name;
+  taskStore.set((prev) => {
+    const next = reconcileStages(prev, update(prev), wf);
+    const applied = applyTaskChanges(prev, next, { ...defaultContext(), stageName });
+    return reconcileStages(applied, applied, wf);
+  });
 }
 
 const mapOne = (id: string, fn: (t: Task) => Task) =>
@@ -19,9 +31,23 @@ const mapOne = (id: string, fn: (t: Task) => Task) =>
 
 export const taskActions = {
   add(draft: TaskDraft): Task {
-    const created = createTask(draft, taskStore.get());
+    const [created] = reconcileStages([], [createTask(draft, taskStore.get())], workflowStore.get());
     taskStore.set((prev) => [created, ...prev]);
     return created;
+  },
+
+  /** Move a task to a workflow stage (its status follows the stage category). */
+  setStage(id: string, stageId: string) {
+    const task = taskStore.get().find((t) => t.id === id);
+    if (!task) return;
+    const stage = stagesFor(workflowStore.get(), task.projectId).find((s) => s.id === stageId);
+    if (stage) mapOne(id, (t) => ({ ...t, stageId: stage.id, status: stage.category }));
+  },
+
+  /** Re-align every task with the current workflows (after stages change). */
+  syncStages() {
+    const wf = workflowStore.get();
+    taskStore.set((prev) => reconcileStages(prev, prev, wf));
   },
 
   patch(id: string, patch: TaskPatch) {
